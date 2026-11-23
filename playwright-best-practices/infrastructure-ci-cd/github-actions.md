@@ -15,9 +15,7 @@
 
 ```bash
 npx playwright install --with-deps    # browsers + OS dependencies
-npx playwright test --shard=1/4       # run shard 1 of 4
 npx playwright test --reporter=github # PR annotations
-npx playwright merge-reports ./blob-report  # combine shard reports
 ```
 
 ## Workflow Patterns
@@ -85,109 +83,6 @@ jobs:
           name: traces
           path: test-results/
           retention-days: 7
-```
-
-### Sharded Execution
-
-**Use when**: Test suite exceeds 10 minutes. Sharding cuts wall-clock time significantly.
-**Avoid when**: Suite runs under 5 minutes—sharding overhead negates benefits.
-
-```yaml
-# .github/workflows/e2e-sharded.yml
-name: E2E Tests (Sharded)
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-concurrency:
-  group: e2e-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  CI: true
-
-jobs:
-  test:
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1/4, 2/4, 3/4, 4/4]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: npm ci
-
-      - name: Cache browsers
-        id: browser-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install browsers
-        if: steps.browser-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
-
-      - name: Install OS dependencies
-        if: steps.browser-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps
-
-      - name: Run tests (shard ${{ matrix.shard }})
-        run: npx playwright test --shard=${{ matrix.shard }}
-
-      - name: Upload blob report
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: blob-${{ strategy.job-index }}
-          path: blob-report/
-          retention-days: 1
-
-  merge:
-    if: ${{ !cancelled() }}
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - run: npm ci
-
-      - name: Download blob reports
-        uses: actions/download-artifact@v4
-        with:
-          path: all-blobs
-          pattern: blob-*
-          merge-multiple: true
-
-      - name: Merge reports
-        run: npx playwright merge-reports --reporter=html ./all-blobs
-
-      - name: Upload merged report
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: playwright-report/
-          retention-days: 14
-```
-
-**Config for sharding**—enable blob reporter:
-
-```typescript
-// playwright.config.ts
-import { defineConfig } from '@playwright/test';
-
-export default defineConfig({
-  reporter: process.env.CI
-    ? [['blob'], ['github']]
-    : [['html', { open: 'on-failure' }]],
-});
 ```
 
 ### Container-Based Execution
@@ -431,9 +326,6 @@ jobs:
 
 | Scenario | Approach |
 |---|---|
-| Small suite (< 5 min) | Single job, no sharding |
-| Medium suite (5-20 min) | 2-4 shards with matrix |
-| Large suite (20+ min) | 4-8 shards + blob merge |
 | Cross-browser on PRs | Chromium only on PRs; all browsers on main |
 | Staging/prod smoke tests | Separate workflow with `environment:` |
 | Nightly full regression | `schedule` trigger + `workflow_dispatch` |
@@ -445,7 +337,6 @@ jobs:
 | Mistake | Problem | Fix |
 |---|---|---|
 | No `concurrency` group | Duplicate runs waste minutes | Add `concurrency: { group: ..., cancel-in-progress: true }` |
-| `fail-fast: true` with sharding | One failure cancels others | Set `fail-fast: false` |
 | No browser caching | 60-90 seconds wasted per run | Cache `~/.cache/ms-playwright` |
 | No `timeout-minutes` | Stuck jobs run for 6 hours | Set explicit timeout: 20-30 minutes |
 | Artifacts only on failure | No report when tests pass | Use `if: ${{ !cancelled() }}` |
@@ -487,27 +378,6 @@ export default defineConfig({
 });
 ```
 
-### Sharded reports incomplete
-
-**Cause**: Artifact names collide or `merge-multiple` not set.
-
-**Fix**: Unique names per shard and enable merge:
-
-```yaml
-# Upload in each shard
-- uses: actions/upload-artifact@v4
-  with:
-    name: blob-${{ strategy.job-index }}
-    path: blob-report/
-
-# Download in merge job
-- uses: actions/download-artifact@v4
-  with:
-    path: all-blobs
-    pattern: blob-*
-    merge-multiple: true
-```
-
 ### `webServer` fails: "port already in use"
 
 **Cause**: Zombie process from previous run.
@@ -539,8 +409,5 @@ export default defineConfig({
 ## Related
 
 - [test-tags.md](../core/test-tags.md) — tagging and filtering tests
-- [parallel-sharding.md](parallel-sharding.md) — sharding strategies
 - [reporting.md](reporting.md) — reporter configuration
 - [docker.md](docker.md) — container images
-- [gitlab.md](gitlab.md) — GitLab CI equivalent
-- [other-providers.md](other-providers.md) — CircleCI, Azure DevOps, Jenkins

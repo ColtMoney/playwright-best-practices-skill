@@ -161,44 +161,6 @@ test("Google OAuth login", async ({ page }) => {
 });
 ```
 
-### Mock OAuth (Recommended)
-
-```typescript
-test("mock OAuth flow", async ({ page, context }) => {
-  // Mock the OAuth callback instead of real flow
-  await page.route("**/auth/callback**", async (route) => {
-    // Simulate successful OAuth
-    const url = new URL(route.request().url());
-    url.searchParams.set("code", "mock-auth-code");
-    await route.fulfill({
-      status: 302,
-      headers: { Location: "/dashboard" },
-    });
-  });
-
-  // Mock token exchange
-  await page.route("**/api/auth/token", (route) =>
-    route.fulfill({
-      json: {
-        access_token: "mock-token",
-        user: { name: "Test User", email: "test@example.com" },
-      },
-    }),
-  );
-
-  await page.goto("/login");
-  await page.getByRole("button", { name: "Sign in with Google" }).click();
-
-  // Should redirect to dashboard without actual OAuth
-  await expect(page).toHaveURL("/dashboard");
-  await expect(page.getByText("Welcome, Test User")).toBeVisible();
-});
-```
-
-### OAuth Fixture
-
-> **For comprehensive OAuth mocking patterns** (fixtures, multiple providers, SAML SSO), see [third-party.md](third-party.md#oauthsso-mocking). This section focuses on popup window handling mechanics for OAuth flows.
-
 ## Multiple Windows
 
 ### Test Across Multiple Windows
@@ -278,11 +240,9 @@ test("cleanup tabs after test", async ({ context }) => {
 | Anti-Pattern            | Problem                        | Solution                                   |
 | ----------------------- | ------------------------------ | ------------------------------------------ |
 | Not waiting for popup   | Race condition                 | Use `waitForEvent("popup")` before trigger |
-| Testing real OAuth      | Slow, flaky, needs credentials | Mock OAuth endpoints                       |
 | Assuming popup opens    | May be blocked                 | Handle both open and blocked cases         |
 | Not closing extra pages | Resource leak                  | Close pages in cleanup                     |
 
 ## Related References
 
 - **Authentication**: See [fixtures-hooks.md](../core/fixtures-hooks.md) for auth patterns
-- **Network**: See [network-advanced.md](network-advanced.md) for mocking OAuth

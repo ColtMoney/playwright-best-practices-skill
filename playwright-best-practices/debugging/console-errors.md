@@ -219,14 +219,14 @@ test("capture JS error details", async ({ page }) => {
 });
 ```
 
-### Test Error Boundary Triggers
+### Test Vue Error Handler
 
 ```typescript
-test("error boundary catches render error", async ({ page }) => {
+test("Vue error handler catches render error", async ({ page }) => {
   let errorCaught = false;
 
   page.on("pageerror", () => {
-    // Note: React error boundaries catch errors before they become pageerrors
+    // Vue error handlers may catch errors before they become pageerrors
     // This would only fire for unhandled errors
     errorCaught = true;
   });
@@ -239,9 +239,9 @@ test("error boundary catches render error", async ({ page }) => {
 
   await page.goto("/dashboard");
 
-  // Error boundary should show fallback, not crash
+  // Vue error handler should show fallback, not crash
   await expect(page.getByText("Something went wrong")).toBeVisible();
-  expect(errorCaught).toBe(false); // Error was caught by boundary
+  expect(errorCaught).toBe(false); // Error was caught by the Vue error handler
 });
 ```
 
@@ -275,35 +275,35 @@ test("no deprecation warnings", async ({ page }) => {
 });
 ```
 
-### React Development Warnings
+### Vue Development Warnings
 
 ```typescript
-test("no React warnings", async ({ page }) => {
-  const reactWarnings: string[] = [];
+test("no Vue warnings", async ({ page }) => {
+  const vueWarnings: string[] = [];
 
   page.on("console", (msg) => {
     const text = msg.text();
     if (
       msg.type() === "warning" &&
-      (text.includes("Warning:") || text.includes("React"))
+      (text.includes("[Vue warn]") || text.includes("Vue"))
     ) {
-      reactWarnings.push(text);
+      vueWarnings.push(text);
     }
   });
 
   await page.goto("/");
 
-  // Common React warnings to check
-  const criticalWarnings = reactWarnings.filter(
+  // Common Vue warnings to check
+  const criticalWarnings = vueWarnings.filter(
     (w) =>
-      w.includes("Each child in a list should have a unique") ||
-      w.includes("Cannot update a component") ||
-      w.includes("Can't perform a React state update"),
+      w.includes("Failed to resolve component") ||
+      w.includes("Invalid prop") ||
+      w.includes("Unhandled error during execution"),
   );
 
   expect(
     criticalWarnings,
-    `React warnings:\n${criticalWarnings.join("\n")}`,
+    `Vue warnings:\n${criticalWarnings.join("\n")}`,
   ).toHaveLength(0);
 });
 ```

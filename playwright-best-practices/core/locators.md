@@ -7,7 +7,6 @@
 3. [Filtering & Chaining](#filtering--chaining)
 4. [Dynamic Content](#dynamic-content)
 5. [Shadow DOM](#shadow-dom)
-6. [Iframes](#iframes)
 
 ## Priority Order
 
@@ -184,21 +183,6 @@ page.getByRole("button", { name: "Shadow Button" });
 
 // Explicit shadow DOM traversal (if needed)
 page.locator("my-component").locator("button");
-```
-
-## Iframes
-
-```typescript
-// By frame name or URL
-const frame = page.frameLocator('iframe[name="content"]');
-await frame.getByRole("button").click();
-
-// By index
-const frame = page.frameLocator("iframe").first();
-
-// Nested iframes
-const nestedFrame = page.frameLocator("#outer").frameLocator("#inner");
-await nestedFrame.getByText("Content").click();
 ```
 
 ## Debugging Locators

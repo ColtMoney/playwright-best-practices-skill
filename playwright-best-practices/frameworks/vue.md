@@ -1,17 +1,16 @@
-# Vue and Nuxt Testing
+# Vue Testing
 
 ## Table of Contents
 
 1. [Commands](#commands)
 2. [Configuration](#configuration)
 3. [Patterns](#patterns)
-4. [Vue vs Nuxt Differences](#vue-vs-nuxt-differences)
-5. [Component Testing Dependencies](#component-testing-dependencies)
-6. [Testing v-model](#testing-v-model)
-7. [Capturing Vue Warnings](#capturing-vue-warnings)
-8. [Anti-Patterns](#anti-patterns)
+4. [Component Testing Dependencies](#component-testing-dependencies)
+5. [Testing v-model](#testing-v-model)
+6. [Capturing Vue Warnings](#capturing-vue-warnings)
+7. [Anti-Patterns](#anti-patterns)
 
-> **When to use**: Testing Vue 3 applications with composition API, Pinia stores, Vue Router, Nuxt 3 apps, Teleport portals, and transitions.
+> **When to use**: Testing Vue 3 applications with composition API, Pinia stores, Vue Router, Teleport portals, and transitions.
 
 ## Commands
 
@@ -57,45 +56,6 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-  },
-});
-```
-
-### Nuxt 3
-
-Nuxt uses port 3000 and requires a build step before testing.
-
-```typescript
-// playwright.config.ts
-import { defineConfig, devices } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './tests/e2e',
-  testMatch: '**/*.spec.ts',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  },
-
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
-
-  webServer: {
-    command: process.env.CI
-      ? 'npx nuxi build && npx nuxi preview'
-      : 'npx nuxi dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: {
-      NUXT_PUBLIC_API_BASE: 'http://localhost:3000/api',
-    },
   },
 });
 ```
@@ -439,75 +399,6 @@ test.describe('composition API', () => {
 });
 ```
 
-### Nuxt-Specific Patterns
-
-**Use when**: Testing Nuxt 3 with SSR, auto-imports, server routes, and middleware.
-
-```typescript
-import { test, expect } from '@playwright/test';
-
-test.describe('nuxt features', () => {
-  test('SSR renders server-fetched data', async ({ page }) => {
-    await page.goto('/posts');
-
-    await expect(page.getByRole('article')).toHaveCount(10);
-    await expect(page.getByRole('article').first()).toContainText(/\w+/);
-  });
-
-  test('server route returns data', async ({ request }) => {
-    const response = await request.get('/api/items');
-
-    expect(response.ok()).toBeTruthy();
-    const data = await response.json();
-    expect(data).toBeInstanceOf(Array);
-    expect(data[0]).toHaveProperty('id');
-  });
-
-  test('middleware redirects unauthorized', async ({ page }) => {
-    await page.goto('/admin');
-
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test('NuxtLink enables SPA navigation', async ({ page }) => {
-    await page.goto('/');
-
-    await page.evaluate(() => {
-      (window as any).__marker = 'spa';
-    });
-
-    await page.getByRole('link', { name: 'Posts' }).click();
-    await page.waitForURL('/posts');
-
-    const marker = await page.evaluate(() => (window as any).__marker);
-    expect(marker).toBe('spa');
-  });
-
-  test('useHead sets meta tags', async ({ page }) => {
-    await page.goto('/posts/hello-world');
-
-    const title = await page.title();
-    expect(title).toContain('Hello World');
-
-    const desc = await page.locator('meta[name="description"]').getAttribute('content');
-    expect(desc).toBeTruthy();
-    expect(desc!.length).toBeGreaterThan(50);
-  });
-});
-```
-
-## Vue vs Nuxt Differences
-
-| Aspect | Vue 3 (Vite) | Nuxt 3 |
-| --- | --- | --- |
-| Default port | `5173` | `3000` |
-| Dev command | `npm run dev` | `npx nuxi dev` |
-| Build + preview | `npm run build && npx vite preview` | `npx nuxi build && npx nuxi preview` |
-| SSR | Optional | Built-in |
-| API routes | External backend | `/server/api/` built-in |
-| Env variables | `VITE_*` prefix | `NUXT_PUBLIC_*` (client), `NUXT_*` (server) |
-| File-based routing | No | Yes |
-
 ## Component Testing Dependencies
 
 Components depending on Pinia or Vue Router need these provided:
@@ -571,4 +462,3 @@ test('no Vue warnings during render', async ({ page }) => {
 | Mock Pinia by patching `window.__pinia` | Fragile; may not trigger reactivity | Control state through UI or mock API responses |
 | Test composables via `page.evaluate` | Composables need Vue's setup context | Test through components or unit test with Vitest |
 | `page.locator('.v-btn')` for Vuetify | Class names change between versions | `page.getByRole('button', { name: 'Submit' })` |
-| Run Nuxt dev server in CI | Dev mode is slower with hot reload overhead | Use `npx nuxi build && npx nuxi preview` |

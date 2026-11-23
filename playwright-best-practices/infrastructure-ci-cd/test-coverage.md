@@ -122,20 +122,16 @@ import type { Page } from "@playwright/test";
 type JSCoverage = Awaited<ReturnType<Page["coverage"]["stopJSCoverage"]>>;
 const map = istanbulCoverage.createCoverageMap({});
 
-// Optional arguments allow processing downloaded shard output directories.
-const roots = process.argv.slice(2);
-if (roots.length === 0) roots.push("test-results");
-for (const root of roots) {
-  const files = await fs.readdir(root, { recursive: true });
-  for (const file of files.filter((f) => f.endsWith("js-coverage.json"))) {
-    const entries: JSCoverage = JSON.parse(await fs.readFile(path.join(root, file), "utf8"));
-    for (const entry of entries) {
-      if (!entry.url.includes("/src/") || entry.source === undefined) continue;
-      const converter = v8ToIstanbul(entry.url, 0, { source: entry.source });
-      await converter.load();
-      converter.applyCoverage(entry.functions);
-      map.merge(converter.toIstanbul());
-    }
+const root = "test-results";
+const files = await fs.readdir(root, { recursive: true });
+for (const file of files.filter((f) => f.endsWith("js-coverage.json"))) {
+  const entries: JSCoverage = JSON.parse(await fs.readFile(path.join(root, file), "utf8"));
+  for (const entry of entries) {
+    if (!entry.url.includes("/src/") || entry.source === undefined) continue;
+    const converter = v8ToIstanbul(entry.url, 0, { source: entry.source });
+    await converter.load();
+    converter.applyCoverage(entry.functions);
+    map.merge(converter.toIstanbul());
   }
 }
 await fs.mkdir(".nyc_output", { recursive: true });
@@ -179,15 +175,6 @@ npx nyc check-coverage --temp-dir=.nyc_output --include='**/src/core/**' --per-f
 Ensure your app's expected source files appear in the report. Runtime coverage only includes loaded scripts; an empty or incomplete report is not proof that unvisited source files meet a threshold.
 
 ## Advanced Patterns
-
-### Merging Coverage Across Shards
-
-Download each shard's `test-results/` into a separate directory, then pass all roots to the conversion script. `CoverageMap.merge()` combines execution counts for the same source file; concatenating raw ranges and adding lengths would double-count overlapping coverage.
-
-```bash
-npx tsx scripts/convert-coverage.ts shard-1/test-results shard-2/test-results
-npx nyc report --temp-dir=.nyc_output --report-dir=coverage --reporter=html --reporter=lcov
-```
 
 ### Incremental Coverage
 

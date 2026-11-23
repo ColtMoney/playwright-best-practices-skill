@@ -142,37 +142,6 @@ jobs:
           HOME: /root
 ```
 
-**GitLab CI:**
-
-```yaml
-test:
-  image: mcr.microsoft.com/playwright:v1.48.0-noble
-  script:
-    - npm ci
-    - npx playwright test
-```
-
-**Jenkins:**
-
-```groovy
-pipeline {
-    agent {
-        docker {
-            image 'mcr.microsoft.com/playwright:v1.48.0-noble'
-            args '-u root'
-        }
-    }
-    stages {
-        stage('Test') {
-            steps {
-                sh 'npm ci'
-                sh 'npx playwright test'
-            }
-        }
-    }
-}
-```
-
 ### Dev Container Setup
 
 VS Code Dev Container or GitHub Codespaces configuration:

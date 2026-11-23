@@ -25,8 +25,8 @@ The skill triggers when the AI infers you need help with things like:
 - Writing new E2E, component, API, visual regression, or accessibility tests
 - Testing mobile/responsive layouts, touch gestures, or device emulation
 - Implementing file uploads/downloads, date/time mocking, or WebSocket testing
-- Handling OAuth popups, geolocation, permissions, or multi-tab flows
-- Testing iframes, canvas/WebGL, service workers, or PWA features
+- Handling OAuth popups or multi-tab flows
+- Testing service workers or PWA features
 - Testing Electron desktop apps or browser extensions
 - Internationalization (i18n), locales, RTL layouts, or date/number formats
 - Testing error states, offline mode, or network failure scenarios
@@ -35,7 +35,7 @@ The skill triggers when the AI infers you need help with things like:
 - Reviewing or refactoring Playwright test code
 - Fixing flaky tests or debugging failures
 - Setting up CI/CD, test coverage, or global setup/teardown
-- Configuring projects, dependencies, parallel runs, or sharding
+- Configuring projects, dependencies, or parallel runs
 
 You don't have to mention "skill" or "Playwright best practices"; describe your task (e.g. "fix this flaky login test" or "add accessibility tests") and the AI will use the skill when it's relevant.
 
@@ -71,19 +71,11 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 
 | Topic               | Reference                 | Use for                                        |
 | ------------------- | ------------------------- | ---------------------------------------------- |
-| Accessibility       | `accessibility.md`        | Axe-core, keyboard nav, ARIA, focus management |
 | API testing         | `api-testing.md`          | REST API testing, request context              |
-| Component testing   | `component-testing.md`    | CT setup, mounting, props, mocking             |
-| Visual regression   | `visual-regression.md`    | Screenshot comparison, thresholds              |
 | File operations     | `file-operations.md`      | Upload, download basics                        |
 | File upload/download| `file-upload-download.md` | Progress, cancellation, retry patterns         |
 | Forms validation    | `forms-validation.md`     | Form testing, validation states                |
-| Drag and drop       | `drag-drop.md`            | Drag-and-drop interactions                     |
-| GraphQL testing     | `graphql-testing.md`      | GraphQL queries, mutations, mocking            |
-| Canvas/WebGL        | `canvas-webgl.md`         | Canvas testing, charts, WebGL, games           |
-| i18n                | `i18n.md`                 | Locales, RTL, date/number formats              |
-| Electron            | `electron.md`             | Desktop apps, IPC, main/renderer process       |
-| Browser extensions  | `browser-extensions.md`   | Popup, background, content scripts, APIs       |
+| File drop zone      | `drag-drop.md`            | Drag-and-drop file uploads                     |
 | Security testing    | `security-testing.md`     | XSS, CSRF, auth security, authorization        |
 | Performance testing | `performance-testing.md`  | Web Vitals, budgets, Lighthouse                |
 
@@ -97,34 +89,26 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 | Clock mocking    | `clock-mocking.md`      | Date/time mocking, timezones, timers        |
 | Multi-context    | `multi-context.md`      | Popups, new tabs, OAuth flows               |
 | Multi-user       | `multi-user.md`         | Collaboration, RBAC, concurrent actions     |
-| Network advanced | `network-advanced.md`   | GraphQL, HAR, request modification          |
-| Third-party      | `third-party.md`        | OAuth, payments, email/SMS mocking          |
 
 ### Browser APIs (`browser-apis/`)
 
 | Topic           | Reference            | Use for                                     |
 | --------------- | -------------------- | ------------------------------------------- |
-| Browser APIs    | `browser-apis.md`    | Geolocation, permissions, clipboard, camera |
 | WebSockets      | `websockets.md`      | Real-time testing, SSE, reconnection        |
-| iFrames         | `iframes.md`         | Cross-origin, nested, dynamic iframes       |
-| Service workers | `service-workers.md` | PWA, caching, offline, push notifications   |
+| Service workers | `service-workers.md` | PWA, caching, offline                       |
 
 ### Architecture (`architecture/`)
 
 | Topic             | Reference              | Use for                              |
 | ----------------- | ---------------------- | ------------------------------------ |
 | POM vs fixtures   | `pom-vs-fixtures.md`   | Choosing between patterns            |
-| Test architecture | `test-architecture.md` | Test type selection, structure       |
-| When to mock      | `when-to-mock.md`      | Mock vs real services decisions      |
+| Test architecture | `test-architecture.md` | E2E scenario structure               |
 
 ### Frameworks (`frameworks/`)
 
-| Topic   | Reference     | Use for                        |
-| ------- | ------------- | ------------------------------ |
-| React   | `react.md`    | React-specific testing patterns |
-| Angular | `angular.md`  | Angular-specific testing        |
-| Vue     | `vue.md`      | Vue/Nuxt testing patterns       |
-| Next.js | `nextjs.md`   | Next.js SSR/SSG testing         |
+| Topic | Reference | Use for                   |
+| ----- | --------- | ------------------------- |
+| Vue   | `vue.md`  | Vue testing patterns |
 
 ### Infrastructure & CI/CD (`infrastructure-ci-cd/`)
 
@@ -132,10 +116,7 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 | ---------------- | ---------------------- | ------------------------------------ |
 | CI/CD            | `ci-cd.md`             | Pipelines, general CI setup          |
 | GitHub Actions   | `github-actions.md`    | GitHub-specific workflows            |
-| GitLab CI        | `gitlab.md`            | GitLab-specific pipelines            |
-| Other providers  | `other-providers.md`   | CircleCI, Azure DevOps, Jenkins      |
 | Docker           | `docker.md`            | Container setup, Playwright images   |
-| Parallel/sharding| `parallel-sharding.md` | Sharding, parallel execution         |
 | Performance      | `performance.md`       | Parallel runs, optimization          |
 | Reporting        | `reporting.md`         | Test reporters, artifacts            |
 | Test coverage    | `test-coverage.md`     | V8 coverage, reports, thresholds, CI |

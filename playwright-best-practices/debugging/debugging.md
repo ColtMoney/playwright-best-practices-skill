@@ -382,19 +382,6 @@ console.log("Visible:", await element.isVisible());
 console.log("Enabled:", await element.isEnabled());
 ```
 
-### Frame Issues
-
-```typescript
-// Debug: List all frames
-for (const frame of page.frames()) {
-  console.log("Frame:", frame.url());
-}
-
-// Debug: Check if element is in iframe
-const frame = page.frameLocator("iframe").first();
-console.log(await frame.getByRole("button").count());
-```
-
 ### Browser Executable Missing
 
 `browserType.launch: Executable doesn't exist` means the browser build for this Playwright version is not installed. Each Playwright version needs one specific build. Builds that other versions installed in `~/.cache/ms-playwright` (Linux) or `~/Library/Caches/ms-playwright` (macOS) do not count.
@@ -451,12 +438,12 @@ test("with attachments", async ({ page }, testInfo) => {
 
 | Symptom                                       | Common Causes                                                | Quick Fixes                                                         | Reference                                                                  |
 | --------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Element not found**                         | Wrong selector, element not visible, in iframe, timing issue | Check locator with Inspector, wait for visibility, use frameLocator | [locators.md](../core/locators.md), [assertions-waiting.md](../core/assertions-waiting.md) |
+| **Element not found**                         | Wrong selector, element not visible, timing issue            | Check locator with Inspector and wait for visibility                | [locators.md](../core/locators.md), [assertions-waiting.md](../core/assertions-waiting.md) |
 | **Timeout errors**                            | Slow network, heavy page load, waiting for wrong condition   | Increase timeout, wait for specific response, check network tab     | [assertions-waiting.md](../core/assertions-waiting.md)                             |
 | **Flaky tests**                               | Race conditions, shared state, timing dependencies           | See comprehensive flaky test guide                                  | [flaky-tests.md](flaky-tests.md)                                           |
 | **Tests pass locally, fail in CI**            | Environment differences, missing dependencies, timing        | Simulate CI locally, check CI logs, verify environment vars         | [ci-cd.md](../infrastructure-ci-cd/ci-cd.md), [flaky-tests.md](flaky-tests.md)                     |
 | **Slow test execution**                       | Not parallelized, heavy network calls, unnecessary waits     | Enable parallelization, mock APIs, optimize waits                   | [performance.md](../infrastructure-ci-cd/performance.md)                                           |
-| **Selector works in browser but not in test** | Element not attached, wrong context, dynamic content         | Use auto-waiting, check iframe, verify element state                | [locators.md](../core/locators.md)                                                 |
+| **Selector works in browser but not in test** | Element not attached, wrong context, dynamic content         | Use auto-waiting and verify element state                           | [locators.md](../core/locators.md)                                                 |
 | **Test fails on retry**                       | Non-deterministic data, external dependencies                | Use test data fixtures, mock external services                      | [fixtures-hooks.md](../core/fixtures-hooks.md)                                     |
 
 ### Step-by-Step Debugging Process

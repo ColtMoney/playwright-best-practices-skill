@@ -137,8 +137,6 @@ Add `.auth/` to `.gitignore`. Auth state files contain session tokens and should
 **Use when**: Each parallel worker needs its own authenticated session to avoid race conditions for tests that modify server-side state.
 **Avoid when**: Tests are read-only and a modifying shared session is safe, you can use a single shared account.
 
-> **Sharded runs**: `parallelIndex` resets per shard, so different shards can have workers with the same index. To avoid collisions, include the shard identifier in the username (e.g., `worker-${SHARD_INDEX}-${parallelIndex}@example.com`) by passing a `SHARD_INDEX` environment variable from your CI matrix.
-
 ```typescript
 // fixtures/auth.ts
 import { test as base, type BrowserContext } from "@playwright/test";
@@ -341,69 +339,6 @@ test("admin sees remove button, guest does not", async ({ loginAs }) => {
   await expect(guestPage.getByText("Access denied")).toBeVisible();
 });
 ```
-
-### OAuth/SSO Mocking
-
-**Use when**: Your app authenticates via a third-party OAuth provider and you cannot hit the real provider in tests.
-**Avoid when**: You have a dedicated test tenant on the OAuth provider.
-
-A typical OAuth flow works like this:
-
-1. User clicks "Sign in with Provider" → browser navigates to `https://accounts.provider.com/authorize?...`
-2. User authenticates on the provider's page → provider redirects back to your app's **callback route** (e.g. `http://localhost:4000/auth/callback?code=ABC&state=XYZ`)
-3. Your backend exchanges the `code` for an access token, creates a session, and redirects the user to a logged-in page
-
-In tests you can short-circuit step 2 with `page.route()`: intercept the outbound request to the provider and respond with a `302` redirect straight to your callback route, supplying a mock `code` and `state`. Your backend still executes its normal callback handler — the only part that's mocked is the provider's authorization page.
-
-For cases where you want to skip the browser redirect entirely, a second approach calls a **test-only API endpoint** that creates the session server-side and returns the session cookie directly.
-
-```typescript
-// tests/oauth-login.spec.ts — mock the callback route
-import { test, expect } from "@playwright/test";
-
-test("login via mocked OAuth flow", async ({ page }) => {
-  await page.route("https://accounts.provider.com/**", async (route) => {
-    const callbackUrl = new URL("http://localhost:4000/auth/callback");
-    callbackUrl.searchParams.set("code", "mock-auth-code-xyz");
-    callbackUrl.searchParams.set("state", "expected-state-value");
-    await route.fulfill({
-      status: 302,
-      headers: { location: callbackUrl.toString() },
-    });
-  });
-
-  await page.goto("/login");
-  await page.getByRole("button", { name: "Sign in with Provider" }).click();
-
-  await page.waitForURL("/home");
-  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-});
-```
-
-```typescript
-// tests/oauth-login.spec.ts — API-based session injection
-import { test, expect } from "@playwright/test";
-
-test("bypass OAuth entirely via API session injection", async ({
-  page,
-}) => {
-  // Call a test-only endpoint that creates a session without OAuth
-  const response = await page.request.post("/api/test/create-session", {
-    data: {
-      email: "oauth-user@example.com",
-      provider: "provider",
-      role: "member",
-    },
-  });
-  expect(response.ok()).toBeTruthy();
-
-  await page.context().storageState({ path: ".auth/oauth-user.json" });
-  await page.goto("/home");
-  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-});
-```
-
-**Backend requirement**: Your backend must expose a test-only session creation endpoint (guarded by `NODE_ENV=test`) or accept a known test OAuth code.
 
 ### MFA Handling
 
@@ -730,7 +665,6 @@ test.describe("unauthenticated access", () => {
 | Tests modify user state          | Per-worker fixture             | Fast     | Per worker     | Tests update profile, change settings, or mutate data          |
 | Multiple user roles              | Per-project `storageState`     | Fastest  | Per role       | App has admin/member/guest roles                               |
 | Testing the login page           | No `storageState`              | N/A      | Full           | Use `test.use({ storageState: { cookies: [], origins: [] } })` |
-| OAuth/SSO provider               | Mock the callback              | Fast     | Per test       | Never hit real OAuth providers in CI                           |
 | MFA is required                  | TOTP generation or bypass      | Moderate | Per test       | Generate real TOTP codes or use a test-mode bypass             |
 | Token expires mid-suite          | Session refresh fixture        | Fast     | Per check      | Fixture validates the session before use                       |
 | Single test needs different user | `loginAs(role)` fixture        | Moderate | Per call       | Rare: prefer per-project roles                                 |
@@ -757,7 +691,6 @@ Need to test the login page itself?
 | Share a single auth state file across parallel workers that mutate state  | Race conditions                             | Use per-worker fixtures with `{ scope: 'worker' }`                        |
 | Hardcode credentials in test files                                        | Security risk                               | Use environment variables and `.env` files                                |
 | Ignore token expiration                                                   | Tests fail intermittently with 401 errors   | Add a session validity check in your auth fixture                         |
-| Hit real OAuth providers in CI                                            | Flaky: rate limits, CAPTCHA, network issues | Mock the OAuth callback or use API session injection                      |
 | Use `page.waitForTimeout(2000)` after login                               | Arbitrary delay                             | `await page.waitForURL('/home')` or `await expect(heading).toBeVisible()` |
 | Store `.auth/*.json` files in git                                         | Tokens in version control                   | Add `.auth/` to `.gitignore`                                              |
 | Create one "god" test account with all permissions                        | Cannot test role-based access control       | Create separate accounts per role                                         |
@@ -844,28 +777,10 @@ projects: [
 - Use the per-worker authentication fixture pattern
 - Make tests idempotent
 
-### OAuth mock does not work — still redirects to real provider
-
-**Cause**: `page.route()` was registered after the navigation that triggers the OAuth redirect.
-
-**Fix**:
-
-- Register route handlers before any navigation: call `page.route()` before `page.goto()`
-- Log the actual redirect URL to verify the pattern:
-
-```typescript
-page.on("request", (req) => {
-  if (req.url().includes("oauth") || req.url().includes("accounts.provider")) {
-    console.log("OAuth request:", req.url());
-  }
-});
-```
-
 ## Related
 
 - [fixtures-hooks.md](../core/fixtures-hooks.md) — custom fixtures for auth setup and teardown
 - [configuration.md](../core/configuration.md) — `storageState`, projects, and global setup configuration
 - [global-setup.md](../core/global-setup.md) — global setup patterns and project dependencies
-- [network-advanced.md](network-advanced.md) — route interception patterns used in OAuth mocking
 - [api-testing.md](../testing-patterns/api-testing.md) — API request context used in API-based login
 - [flaky-tests.md](../debugging/flaky-tests.md) — diagnosing auth-related flakiness

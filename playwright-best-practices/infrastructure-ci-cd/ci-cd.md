@@ -5,9 +5,8 @@
 1. [GitHub Actions](#github-actions)
 2. [Docker](#docker)
 3. [Reporting](#reporting)
-4. [Sharding](#sharding)
-5. [Environment Management](#environment-management)
-6. [Caching](#caching)
+4. [Environment Management](#environment-management)
+5. [Caching](#caching)
 
 ## GitHub Actions
 
@@ -50,82 +49,6 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-```
-
-### With Sharding
-
-```yaml
-name: Playwright Tests
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  test:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run Playwright tests
-        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-
-      - name: Upload blob report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: blob-report-${{ matrix.shardIndex }}
-          path: blob-report
-          retention-days: 1
-
-  merge-reports:
-    if: ${{ !cancelled() }}
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download blob reports
-        uses: actions/download-artifact@v4
-        with:
-          path: all-blob-reports
-          pattern: blob-report-*
-          merge-multiple: true
-
-      - name: Merge reports
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
-
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v4
-        with:
-          name: html-report
-          path: playwright-report
-          retention-days: 14
 ```
 
 ### With Container
@@ -229,9 +152,6 @@ export default defineConfig({
 
     // JSON for custom processing
     ["json", { outputFile: "results.json" }],
-
-    // Blob for merging shards
-    ["blob", { outputDir: "blob-report" }],
   ],
 });
 ```
@@ -241,41 +161,9 @@ export default defineConfig({
 ```typescript
 export default defineConfig({
   reporter: process.env.CI
-    ? [["github"], ["blob"], ["html"]]
+    ? [["github"], ["html"]]
     : [["list"], ["html"]],
 });
-```
-
-## Sharding
-
-### Command Line
-
-```bash
-# Split into 4 shards, run shard 1
-npx playwright test --shard=1/4
-
-# Run shard 2
-npx playwright test --shard=2/4
-```
-
-### Configuration
-
-```typescript
-// playwright.config.ts
-export default defineConfig({
-  // Evenly distribute tests across shards
-  fullyParallel: true,
-
-  // For blob reporter to merge later
-  reporter: process.env.CI ? [["blob"]] : [["html"]],
-});
-```
-
-### Merge Sharded Reports
-
-```bash
-# After all shards complete, merge blob reports
-npx playwright merge-reports --reporter html ./all-blob-reports
 ```
 
 ## Environment Management
@@ -432,9 +320,7 @@ export default defineConfig({
 | Run headless in CI            | Faster, no display needed |
 | Set retries in CI only        | Handle flakiness          |
 | Upload artifacts on failure   | Debug failures            |
-| Use sharding for large suites | Faster execution          |
 | Cache browsers                | Faster setup              |
-| Use blob reporter for shards  | Merge reports correctly   |
 | Use tags for PR vs nightly    | Fast feedback + coverage  |
 | Exclude @flaky in CI          | Stable pipeline           |
 
@@ -449,7 +335,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI
-    ? [["github"], ["blob"], ["html"]]
+    ? [["github"], ["html"]]
     : [["list"], ["html"]],
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3000",
@@ -463,6 +349,6 @@ export default defineConfig({
 ## Related References
 
 - **Test tags**: See [test-tags.md](../core/test-tags.md) for tagging and filtering patterns
-- **Performance optimization**: See [performance.md](performance.md) for sharding and parallelization
+- **Performance optimization**: See [performance.md](performance.md) for parallel execution
 - **Debugging CI failures**: See [debugging.md](../debugging/debugging.md) for troubleshooting
 - **Test reporting**: See [debugging.md](../debugging/debugging.md) for trace viewer usage

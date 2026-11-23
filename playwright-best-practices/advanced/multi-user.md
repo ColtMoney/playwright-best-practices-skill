@@ -6,7 +6,6 @@
 2. [Real-Time Collaboration](#real-time-collaboration)
 3. [Role-Based Testing](#role-based-testing)
 4. [Concurrent Actions](#concurrent-actions)
-5. [Chat & Messaging](#chat--messaging)
 
 ## Multiple Browser Contexts
 
@@ -335,46 +334,6 @@ test("optimistic locking prevents overwrites", async ({ browser }) => {
 
   await ctx1.close();
   await ctx2.close();
-});
-```
-
-## Chat & Messaging
-
-### Real-Time Chat
-
-```typescript
-test("chat messages sync between users", async ({ browser }) => {
-  const aliceCtx = await browser.newContext();
-  const bobCtx = await browser.newContext();
-
-  const alicePage = await aliceCtx.newPage();
-  const bobPage = await bobCtx.newPage();
-
-  // Setup user identities
-  await alicePage.route("**/api/me", (r) =>
-    r.fulfill({ json: { name: "Alice" } }),
-  );
-  await bobPage.route("**/api/me", (r) => r.fulfill({ json: { name: "Bob" } }));
-
-  await alicePage.goto("/chat/room-1");
-  await bobPage.goto("/chat/room-1");
-
-  // Alice sends message
-  await alicePage.getByLabel("Message").fill("Hi Bob!");
-  await alicePage.getByRole("button", { name: "Send" }).click();
-
-  // Bob sees it
-  await expect(bobPage.getByText("Alice: Hi Bob!")).toBeVisible();
-
-  // Bob replies
-  await bobPage.getByLabel("Message").fill("Hey Alice!");
-  await bobPage.getByRole("button", { name: "Send" }).click();
-
-  // Alice sees it
-  await expect(alicePage.getByText("Bob: Hey Alice!")).toBeVisible();
-
-  await aliceCtx.close();
-  await bobCtx.close();
 });
 ```
 

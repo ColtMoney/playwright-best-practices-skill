@@ -6,8 +6,7 @@
 2. [Registration & Lifecycle](#registration--lifecycle)
 3. [Cache Testing](#cache-testing)
 4. [Offline Testing](#offline-testing)
-5. [Push Notifications](#push-notifications)
-6. [Background Sync](#background-sync)
+5. [Background Sync](#background-sync)
 
 ## Service Worker Basics
 
@@ -326,102 +325,6 @@ test("queues form submission offline", async ({ page, context }) => {
 });
 ```
 
-## Push Notifications
-
-### Mocking Push Subscription
-
-```typescript
-test("handles push subscription", async ({ page, context }) => {
-  // Grant notification permission
-  await context.grantPermissions(["notifications"]);
-
-  // Mock the subscription boundary; do not contact a real push service.
-  await page.addInitScript(() => {
-    PushManager.prototype.subscribe = async () => ({
-      toJSON: () => ({ endpoint: "https://push.example.test/subscription" }),
-    }) as PushSubscription;
-  });
-  await page.goto("/pwa-app");
-
-  // Exercise the mock (not real VAPID key validation or push delivery)
-  const subscription = await page.evaluate(async () => {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      // The mocked subscribe method does not validate a VAPID public key.
-    });
-    return sub.toJSON();
-  });
-
-  expect(subscription.endpoint).toBeDefined();
-});
-```
-
-### Testing Push Message Handling
-
-```typescript
-test("handles push notification", async ({ context, page }) => {
-  await context.grantPermissions(["notifications"]);
-  await page.goto("/pwa-app");
-
-  // Registration may have happened during navigation.
-  const sw = context.serviceWorkers()[0] ||
-    (await context.waitForEvent("serviceworker"));
-
-  // Simulate push message to service worker
-  await sw.evaluate(async () => {
-    // Dispatch push event
-    const pushEvent = new PushEvent("push", {
-      data: JSON.stringify({ title: "Test", body: "Push message" }),
-    });
-    self.dispatchEvent(pushEvent);
-  });
-
-  // Note: Actual notification display testing is limited in Playwright
-  // Focus on verifying the SW handles the push correctly
-});
-```
-
-### Testing Notification Click
-
-```typescript
-test("notification click opens page", async ({ context, page }) => {
-  await context.grantPermissions(["notifications"]);
-  await page.goto("/pwa-app");
-
-  // Store notification URL target
-  let notificationUrl = "";
-
-  // Listen for new pages (notification click opens new page)
-  context.on("page", (newPage) => {
-    notificationUrl = newPage.url();
-  });
-
-  // Trigger notification via SW
-  await page.evaluate(async () => {
-    const reg = await navigator.serviceWorker.ready;
-    await reg.showNotification("Test", {
-      tag: "test-notification",
-      body: "Click me",
-      data: { url: "/notification-target" },
-    });
-  });
-
-  // Simulate clicking notification (via SW)
-  const sw = context.serviceWorkers()[0];
-  await sw.evaluate(async () => {
-    const [notification] = await self.registration.getNotifications({ tag: "test-notification" });
-    self.dispatchEvent(
-      new NotificationEvent("notificationclick", { notification }),
-    );
-  });
-
-  // Verify navigation occurred
-  await page.waitForTimeout(1000);
-  // Check if new page opened or current page navigated
-});
-```
-
 ## Background Sync
 
 ### Testing Background Sync Registration
@@ -493,6 +396,3 @@ test("sync event fires when online", async ({ context, page }) => {
 ## Related References
 
 - **Network Failures**: See [error-testing.md](../debugging/error-testing.md#offline-testing) for unexpected network failure patterns
-- **Browser APIs**: See [browser-apis.md](browser-apis.md) for permissions
-- **Network Mocking**: See [network-advanced.md](../advanced/network-advanced.md) for network interception
-- **Browser Extensions**: See [browser-extensions.md](../testing-patterns/browser-extensions.md) for extension service worker patterns

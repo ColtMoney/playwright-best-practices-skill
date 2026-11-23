@@ -116,7 +116,6 @@ Test individual components in isolation using Playwright Component Testing.
 npm init playwright@latest -- --ct
 ```
 
-For comprehensive component testing patterns including mounting, props, events, slots, mocking, and framework-specific examples (React, Vue, Svelte), see **[component-testing.md](../testing-patterns/component-testing.md)**.
 
 ## API Tests
 
@@ -178,8 +177,6 @@ test("handles slow API", async ({ page }) => {
   await expect(page.getByText("test")).toBeVisible();
 });
 ```
-
-For advanced patterns (GraphQL mocking, HAR recording, request modification, network throttling), see **[network-advanced.md](../advanced/network-advanced.md)**.
 
 ## Visual Regression Tests
 
@@ -295,8 +292,8 @@ tests/
 │   ├── checkout.spec.ts
 │   └── dashboard.spec.ts
 ├── component/              # Component tests
-│   ├── Button.spec.tsx
-│   └── Modal.spec.tsx
+│   ├── Button.spec.ts
+│   └── Modal.spec.ts
 ├── api/                    # API tests
 │   ├── users.spec.ts
 │   └── products.spec.ts
@@ -320,7 +317,6 @@ tests/
 
 ## Related References
 
-- **Component Testing**: See [component-testing.md](../testing-patterns/component-testing.md) for comprehensive CT patterns
 - **Projects**: See [projects-dependencies.md](projects-dependencies.md) for project-based filtering
 - **Page Objects**: See [page-object-model.md](page-object-model.md) for organizing page interactions
 - **Test Data**: See [fixtures-hooks.md](fixtures-hooks.md) for managing test data
