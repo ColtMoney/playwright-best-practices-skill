@@ -255,7 +255,25 @@ test("app works offline", async ({ page, context }) => {
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
-  await page.waitForTimeout(1000); // Allow caching to complete
+
+  // Verify that the current page is actually available in Cache Storage
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async (pageUrl) => {
+          const cacheNames = await caches.keys();
+          for (const name of cacheNames) {
+            const cache = await caches.open(name);
+            if (await cache.match(pageUrl)) return true;
+          }
+          return false;
+        }, page.url()),
+      {
+        message: "wait for the PWA page to be cached",
+        timeout: 10_000,
+      },
+    )
+    .toBe(true);
 
   // Go offline
   await context.setOffline(true);

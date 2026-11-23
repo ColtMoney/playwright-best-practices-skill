@@ -188,19 +188,35 @@ await urlPromise;
 ### Wait for Network
 
 ```typescript
-// Wait for specific response
-const responsePromise = page.waitForResponse("**/api/users");
+// Wait for an exact response origin, path, and method
+const usersUrl = new URL("/api/users", page.url());
+const responsePromise = page.waitForResponse((response) => {
+  const url = new URL(response.url());
+  return (
+    url.origin === usersUrl.origin &&
+    url.pathname === usersUrl.pathname &&
+    response.request().method() === "GET"
+  );
+});
 await page.click("button");
 const response = await responsePromise;
 expect(response.status()).toBe(200);
 
-// Wait for request
-const requestPromise = page.waitForRequest("**/api/submit");
+// Wait for an exact request origin, path, and method
+const submitUrl = new URL("/api/submit", page.url());
+const requestPromise = page.waitForRequest((request) => {
+  const url = new URL(request.url());
+  return (
+    url.origin === submitUrl.origin &&
+    url.pathname === submitUrl.pathname &&
+    request.method() === "POST"
+  );
+});
 await page.click("button");
 const request = await requestPromise;
 
-// Wait for no network activity
-await page.waitForLoadState("networkidle");
+// Wait for the specific UI state that proves the operation completed
+await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
 ```
 
 ### Wait for Element State
