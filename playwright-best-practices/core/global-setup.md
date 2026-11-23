@@ -37,7 +37,7 @@ export default defineConfig({
 });
 ```
 
-> **Authentication in Global Setup**: For authentication patterns using storage state in global setup, see [fixtures-hooks.md](fixtures-hooks.md#authentication-patterns). Setup projects are generally preferred for authentication as they provide access to Playwright fixtures.
+> **Browser authentication**: Use a setup project because it provides Playwright fixtures and report integration. See [fixtures-hooks.md](fixtures-hooks.md#authentication-patterns).
 
 ### Global Setup with Return Value
 

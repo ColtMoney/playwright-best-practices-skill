@@ -388,7 +388,7 @@ export default defineConfig({
 | Config in test files: `test.use({ viewport: {...} })` everywhere | Scattered, inconsistent | Define once in project config |
 | `retries: 3` locally | Hides flakiness | `retries: 0` local, `retries: 2` CI |
 | No `forbidOnly` in CI | Committed `test.only` runs single test | `forbidOnly: !!process.env.CI` |
-| `globalSetup` for browser auth | No browser context available | Use setup project with dependencies |
+| `globalSetup` for browser auth | No built-in `page`, `context`, or `request` fixtures | Use setup project with dependencies |
 | Committing `.env` with credentials | Security risk | Commit `.env.example` only |
 
 ## Troubleshooting

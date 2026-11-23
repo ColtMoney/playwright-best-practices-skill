@@ -4,11 +4,10 @@
 
 1. [Configuration](#configuration)
 2. [E2E Tests](#e2e-tests)
-3. [Component Tests](#component-tests)
-4. [API Tests](#api-tests)
-5. [Visual Regression Tests](#visual-regression-tests)
-6. [Directory Structure](#directory-structure)
-7. [Tagging & Filtering](#tagging--filtering)
+3. [API Tests](#api-tests)
+4. [Visual Regression Tests](#visual-regression-tests)
+5. [Directory Structure](#directory-structure)
+6. [Tagging & Filtering](#tagging--filtering)
 
 ### Project Setup
 
@@ -107,15 +106,6 @@ test.describe("Checkout Flow", () => {
 - Keep tests independent
 - Use realistic data
 - Clean up test data in teardown
-
-## Component Tests
-
-Test individual components in isolation using Playwright Component Testing.
-
-```bash
-npm init playwright@latest -- --ct
-```
-
 
 ## API Tests
 
@@ -291,9 +281,6 @@ tests/
 │   ├── auth.spec.ts
 │   ├── checkout.spec.ts
 │   └── dashboard.spec.ts
-├── component/              # Component tests
-│   ├── Button.spec.ts
-│   └── Modal.spec.ts
 ├── api/                    # API tests
 │   ├── users.spec.ts
 │   └── products.spec.ts

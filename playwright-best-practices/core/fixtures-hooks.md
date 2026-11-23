@@ -239,7 +239,7 @@ test.describe("User Management", () => {
 
 ## Authentication Patterns
 
-### Global Setup with Storage State
+### Setup Project with Storage State
 
 ```typescript
 // auth.setup.ts

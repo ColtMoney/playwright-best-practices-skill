@@ -89,32 +89,24 @@ test("authenticated user sees home page", async ({ page }) => {
 });
 ```
 
-### Global Setup Authentication
+### Setup Project Authentication
 
-**Use when**: You want to authenticate once before the entire test suite runs.
-**Avoid when**: Different tests need different users, or your tokens expire faster than your suite runs.
+**Use when**: You want to authenticate once before the dependent test projects run.
+**Avoid when**: Different tests need isolated users, or your tokens expire faster than your suite runs.
 
 ```typescript
-// global-setup.ts
-import { chromium, type FullConfig } from "@playwright/test";
+// auth.setup.ts
+import { test as setup, expect } from "@playwright/test";
 
-async function globalSetup(config: FullConfig) {
-  const { baseURL } = config.projects[0].use;
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage();
-
-  await page.goto(`${baseURL}/login`);
+setup("authenticate", async ({ page }) => {
+  await page.goto("/login");
   await page.getByLabel("Username").fill(process.env.TEST_USER_EMAIL!);
   await page.getByLabel("Password").fill(process.env.TEST_USER_PASSWORD!);
   await page.getByRole("button", { name: "Log in" }).click();
-  await page.waitForURL("**/home");
+  await expect(page).toHaveURL(/\/home/);
 
-  await context.storageState({ path: ".auth/session.json" });
-  await browser.close();
-}
-
-export default globalSetup;
+  await page.context().storageState({ path: ".auth/session.json" });
+});
 ```
 
 ```typescript
@@ -122,11 +114,22 @@ export default globalSetup;
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  globalSetup: require.resolve("./global-setup"),
   use: {
     baseURL: "http://localhost:4000",
-    storageState: ".auth/session.json",
   },
+  projects: [
+    {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+    },
+    {
+      name: "chromium",
+      dependencies: ["setup"],
+      use: {
+        storageState: ".auth/session.json",
+      },
+    },
+  ],
 });
 ```
 
@@ -189,8 +192,8 @@ test("update display name", async ({ authenticatedContext }) => {
 **Avoid when**: Your app has a single user role.
 
 ```typescript
-// global-setup.ts — authenticate all roles
-import { chromium, type FullConfig } from "@playwright/test";
+// auth.setup.ts — authenticate all roles
+import { test as setup, expect } from "@playwright/test";
 
 const accounts = [
   {
@@ -210,26 +213,17 @@ const accounts = [
   },
 ];
 
-async function globalSetup(config: FullConfig) {
-  const { baseURL } = config.projects[0].use;
-
-  for (const { role, email, password } of accounts) {
-    const browser = await chromium.launch();
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.goto(`${baseURL}/login`);
+for (const { role, email, password } of accounts) {
+  setup(`authenticate as ${role}`, async ({ page }) => {
+    await page.goto("/login");
     await page.getByLabel("Username").fill(email);
     await page.getByLabel("Password").fill(password);
     await page.getByRole("button", { name: "Log in" }).click();
-    await page.waitForURL("**/home");
+    await expect(page).toHaveURL(/\/home/);
 
-    await context.storageState({ path: `.auth/${role}.json` });
-    await browser.close();
-  }
+    await page.context().storageState({ path: `.auth/${role}.json` });
+  });
 }
-
-export default globalSetup;
 ```
 
 ```typescript
@@ -237,20 +231,26 @@ export default globalSetup;
 import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  globalSetup: require.resolve("./global-setup"),
   projects: [
     {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+    },
+    {
       name: "admin",
+      dependencies: ["setup"],
       use: { storageState: ".auth/admin.json" },
       testMatch: "**/*.admin.spec.ts",
     },
     {
       name: "member",
+      dependencies: ["setup"],
       use: { storageState: ".auth/member.json" },
       testMatch: "**/*.member.spec.ts",
     },
     {
       name: "guest",
+      dependencies: ["setup"],
       use: { storageState: ".auth/guest.json" },
       testMatch: "**/*.guest.spec.ts",
     },
@@ -549,32 +549,20 @@ test.describe("login page", () => {
 API login is typically 5-10x faster than UI login.
 
 ```typescript
-// global-setup.ts — API-based login (fastest)
-import { request, type FullConfig } from "@playwright/test";
+// auth.setup.ts — API-based login (fastest)
+import { test as setup, expect } from "@playwright/test";
 
-async function globalSetup(config: FullConfig) {
-  const { baseURL } = config.projects[0].use;
-
-  const requestContext = await request.newContext({ baseURL });
-
-  const response = await requestContext.post("/api/auth/login", {
+setup("authenticate via API", async ({ request }) => {
+  const response = await request.post("/api/auth/login", {
     data: {
       email: process.env.TEST_USER_EMAIL!,
       password: process.env.TEST_USER_PASSWORD!,
     },
   });
 
-  if (!response.ok()) {
-    throw new Error(
-      `API login failed: ${response.status()} ${await response.text()}`
-    );
-  }
-
-  await requestContext.storageState({ path: ".auth/session.json" });
-  await requestContext.dispose();
-}
-
-export default globalSetup;
+  expect(response.ok()).toBeTruthy();
+  await request.storageState({ path: ".auth/session.json" });
+});
 ```
 
 ```typescript
@@ -661,7 +649,7 @@ test.describe("unauthenticated access", () => {
 
 | Scenario                         | Approach                       | Speed    | Isolation      | When to Choose                                                 |
 | -------------------------------- | ------------------------------ | -------- | -------------- | -------------------------------------------------------------- |
-| Most tests need auth             | Global setup + `storageState`  | Fastest  | Shared session | Default for nearly every project                               |
+| Most tests need auth             | Setup project + `storageState` | Fastest  | Shared session | Default for nearly every project                               |
 | Tests modify user state          | Per-worker fixture             | Fast     | Per worker     | Tests update profile, change settings, or mutate data          |
 | Multiple user roles              | Per-project `storageState`     | Fastest  | Per role       | App has admin/member/guest roles                               |
 | Testing the login page           | No `storageState`              | N/A      | Full           | Use `test.use({ storageState: { cookies: [], origins: [] } })` |
@@ -676,8 +664,8 @@ test.describe("unauthenticated access", () => {
 Need to test the login page itself?
 ├── Yes → UI login with LoginPage POM, no storageState
 └── No → Do you have a login API endpoint?
-    ├── Yes → API login in global setup, save storageState (fastest)
-    └── No → UI login in global setup, save storageState
+    ├── Yes → API login in a setup project, save storageState (fastest)
+    └── No → UI login in a setup project, save storageState
               └── Tokens expire quickly?
                   ├── Yes → Add session refresh fixture
                   └── No → Standard storageState reuse is fine
@@ -699,7 +687,7 @@ Need to test the login page itself?
 
 ## Troubleshooting
 
-### Global setup fails with "Target page, context or browser has been closed"
+### Authentication setup project fails
 
 **Cause**: The login page redirected unexpectedly, or the browser closed before `storageState()` was called.
 
@@ -707,13 +695,13 @@ Need to test the login page itself?
 
 - Add `await page.waitForURL()` after the login action
 - Check that `baseURL` in your config matches the actual server URL and protocol
-- Add error handling to global setup:
+- Add error handling to the setup test:
 
 ```typescript
 const response = await page.waitForResponse("**/api/auth/**");
 if (!response.ok()) {
   throw new Error(
-    `Login failed in global setup: ${response.status()} ${await response.text()}`
+    `Login failed in setup project: ${response.status()} ${await response.text()}`
   );
 }
 ```
@@ -780,7 +768,7 @@ projects: [
 ## Related
 
 - [fixtures-hooks.md](../core/fixtures-hooks.md) — custom fixtures for auth setup and teardown
-- [configuration.md](../core/configuration.md) — `storageState`, projects, and global setup configuration
-- [global-setup.md](../core/global-setup.md) — global setup patterns and project dependencies
+- [configuration.md](../core/configuration.md) — `storageState` and project configuration
+- [projects-dependencies.md](../core/projects-dependencies.md) — setup project dependencies
 - [api-testing.md](../testing-patterns/api-testing.md) — API request context used in API-based login
 - [flaky-tests.md](../debugging/flaky-tests.md) — diagnosing auth-related flakiness

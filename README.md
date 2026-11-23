@@ -8,7 +8,7 @@
 
 # Playwright Best Practices Skill
 
-A skill that gives the AI specialized guidance for writing, debugging, and maintaining **Playwright** tests in **TypeScript**. Use it in any repo where you work with Playwright so the assistant follows best practices for E2E, component, API, visual regression, accessibility, security, i18n, Electron, and browser extension testing.
+A skill that gives the AI specialized guidance for writing, debugging, and maintaining **Playwright** tests in **TypeScript**. Use it in any repo where you work with Playwright so the assistant follows best practices for E2E, API, visual regression, accessibility, security, i18n, Electron, and browser extension testing.
 
 ## Installation
 
@@ -22,7 +22,7 @@ The skill is activity-based: the AI is directed to the right reference depending
 
 The skill triggers when the AI infers you need help with things like:
 
-- Writing new E2E, component, API, visual regression, or accessibility tests
+- Writing new E2E, API, visual regression, or accessibility tests
 - Testing mobile/responsive layouts, touch gestures, or device emulation
 - Implementing file uploads/downloads, date/time mocking, or WebSocket testing
 - Handling OAuth popups or multi-tab flows
@@ -47,7 +47,7 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 
 | Topic                | Reference                   | Use for                                          |
 | -------------------- | --------------------------- | ------------------------------------------------ |
-| Test structure       | `test-suite-structure.md`   | Structure, config, E2E/component/API/visual tests |
+| Test structure       | `test-suite-structure.md`   | Structure, config, E2E/API/visual tests |
 | Locators             | `locators.md`               | Selectors, robustness, avoiding brittle locators |
 | Assertions & waiting | `assertions-waiting.md`     | Expect APIs, auto-waiting, polling               |
 | Page Object Model    | `page-object-model.md`      | POM structure and patterns                       |

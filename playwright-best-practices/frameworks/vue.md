@@ -5,10 +5,9 @@
 1. [Commands](#commands)
 2. [Configuration](#configuration)
 3. [Patterns](#patterns)
-4. [Component Testing Dependencies](#component-testing-dependencies)
-5. [Testing v-model](#testing-v-model)
-6. [Capturing Vue Warnings](#capturing-vue-warnings)
-7. [Anti-Patterns](#anti-patterns)
+4. [Testing v-model](#testing-v-model)
+5. [Capturing Vue Warnings](#capturing-vue-warnings)
+6. [Anti-Patterns](#anti-patterns)
 
 > **When to use**: Testing Vue 3 applications with composition API, Pinia stores, Vue Router, Teleport portals, and transitions.
 
@@ -16,9 +15,7 @@
 
 ```bash
 npm init playwright@latest
-npm install -D @playwright/experimental-ct-vue
 npx playwright test
-npx playwright test -c playwright-ct.config.ts
 ```
 
 ## Configuration
@@ -60,76 +57,7 @@ export default defineConfig({
 });
 ```
 
-### Component Testing
-
-```typescript
-// playwright-ct.config.ts
-import { defineConfig, devices } from '@playwright/experimental-ct-vue';
-
-export default defineConfig({
-  testDir: './tests/components',
-  testMatch: '**/*.ct.ts',
-
-  use: {
-    trace: 'on-first-retry',
-    ctPort: 3100,
-  },
-
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
-});
-```
-
 ## Patterns
-
-### Component Testing with Experimental CT
-
-**Use when**: Testing complex interactive Vue components in isolation (data tables, form components, custom dropdowns).
-
-**Avoid when**: Component depends heavily on Pinia stores, Vue Router, or backend data—use E2E tests instead.
-
-```typescript
-// tests/components/Stepper.ct.ts
-import { test, expect } from '@playwright/experimental-ct-vue';
-import Stepper from '../../src/components/Stepper.vue';
-
-test('increments value on button click', async ({ mount }) => {
-  const component = await mount(Stepper, {
-    props: { value: 0 },
-  });
-
-  await expect(component.getByText('Value: 0')).toBeVisible();
-  await component.getByRole('button', { name: '+' }).click();
-  await expect(component.getByText('Value: 1')).toBeVisible();
-});
-
-test('emits change event', async ({ mount }) => {
-  const changes: number[] = [];
-  const component = await mount(Stepper, {
-    props: { value: 10 },
-    on: {
-      change: (val: number) => changes.push(val),
-    },
-  });
-
-  await component.getByRole('button', { name: '+' }).click();
-  await component.getByRole('button', { name: '+' }).click();
-
-  expect(changes).toEqual([11, 12]);
-});
-
-test('renders slot content', async ({ mount }) => {
-  const component = await mount(Stepper, {
-    props: { value: 0 },
-    slots: {
-      default: '<span class="label">Quantity</span>',
-    },
-  });
-
-  await expect(component.getByText('Quantity')).toBeVisible();
-});
-```
 
 ### Pinia Store Testing Through UI
 
@@ -399,30 +327,6 @@ test.describe('composition API', () => {
 });
 ```
 
-## Component Testing Dependencies
-
-Components depending on Pinia or Vue Router need these provided:
-
-```typescript
-// playwright/index.ts
-import { beforeMount } from '@playwright/experimental-ct-vue/hooks';
-import { createPinia } from 'pinia';
-import { createMemoryHistory, createRouter } from 'vue-router';
-
-beforeMount(async ({ app, hooksConfig }) => {
-  const pinia = createPinia();
-  app.use(pinia);
-
-  if (hooksConfig?.routes) {
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: hooksConfig.routes,
-    });
-    app.use(router);
-  }
-});
-```
-
 ## Testing v-model
 
 `v-model` works through standard HTML events. Playwright methods trigger correct events automatically:
@@ -457,7 +361,6 @@ test('no Vue warnings during render', async ({ page }) => {
 | --- | --- | --- |
 | `page.evaluate(() => app.__vue_app__.config.globalProperties.$store)` | Accesses Vue internals; breaks on upgrades | Assert on UI that state produces |
 | `page.locator('[data-v-abc123]')` | Scoped style hashes change on every build | Use `getByRole`, `getByText`, `getByTestId` |
-| Import `.vue` files in E2E tests | E2E tests run in Node.js; `.vue` needs compilation | Use `@playwright/experimental-ct-vue` for component tests |
 | `page.waitForTimeout(300)` for transitions | Arbitrary waits are fragile | `await expect(locator).toBeVisible()` auto-waits |
 | Mock Pinia by patching `window.__pinia` | Fragile; may not trigger reactivity | Control state through UI or mock API responses |
 | Test composables via `page.evaluate` | Composables need Vue's setup context | Test through components or unit test with Vitest |
