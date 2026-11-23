@@ -7,7 +7,7 @@
 3. [Anti-Patterns](#anti-patterns)
 4. [Troubleshooting](#troubleshooting)
 
-> **When to use**: Testing REST APIs directly — validating endpoints, seeding test data, or verifying backend behavior without browser overhead.
+> **When to use**: Testing REST APIs directly — validating endpoints or verifying backend behavior without browser overhead.
 
 ## Patterns
 
@@ -253,73 +253,6 @@ test("list response structure", async ({ request }) => {
 });
 ```
 
-### API Data Seeding
-
-**Use when**: E2E tests need specific data to exist before running. API seeding is 10-100x faster than UI-based setup.
-**Avoid when**: The test specifically validates the creation flow through the UI.
-
-```typescript
-import { test as base, expect } from "@playwright/test";
-
-type SeedFixtures = {
-  seedAccount: { id: number; email: string; password: string };
-  seedWorkspace: { id: number; name: string };
-};
-
-export const test = base.extend<SeedFixtures>({
-  seedAccount: async ({ request }, use) => {
-    const email = `account-${Date.now()}@test.io`;
-    const password = "SecurePass123!";
-
-    const resp = await request.post("/api/accounts", {
-      data: { name: "Test Account", email, password },
-    });
-    expect(resp.ok()).toBeTruthy();
-    const account = await resp.json();
-
-    await use({ id: account.id, email, password });
-
-    // Cleanup
-    await request.delete(`/api/accounts/${account.id}`);
-  },
-
-  seedWorkspace: async ({ request, seedAccount }, use) => {
-    const resp = await request.post("/api/workspaces", {
-      data: { name: `Workspace ${Date.now()}`, ownerId: seedAccount.id },
-    });
-    expect(resp.ok()).toBeTruthy();
-    const workspace = await resp.json();
-
-    await use({ id: workspace.id, name: workspace.name });
-
-    await request.delete(`/api/workspaces/${workspace.id}`);
-  },
-});
-
-export { expect };
-```
-
-```typescript
-// tests/e2e/workspace-dashboard.spec.ts
-import { test, expect } from "../../fixtures/seed-fixtures";
-
-test("user sees workspace on dashboard", async ({
-  page,
-  seedAccount,
-  seedWorkspace,
-}) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(seedAccount.email);
-  await page.getByLabel("Password").fill(seedAccount.password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-
-  await page.waitForURL("/dashboard");
-  await expect(
-    page.getByRole("heading", { name: seedWorkspace.name })
-  ).toBeVisible();
-});
-```
-
 ### Error Response Testing
 
 **Use when**: Every API has error paths — test them. A missing 401 test today is a security hole tomorrow.
@@ -550,25 +483,6 @@ test("state machine transitions — publish workflow", async ({ request }) => {
   await request.delete(`/api/articles/${article.id}`);
 });
 
-test("API + E2E hybrid — seed via API, verify in browser", async ({
-  request,
-  page,
-}) => {
-  const resp = await request.post("/api/products", {
-    data: {
-      name: `Hybrid Product ${Date.now()}`,
-      price: 35.0,
-      published: true,
-    },
-  });
-  const product = await resp.json();
-
-  await page.goto("/products");
-  await expect(page.getByRole("heading", { name: product.name })).toBeVisible();
-  await expect(page.getByText("$35.00")).toBeVisible();
-
-  await request.delete(`/api/products/${product.id}`);
-});
 ```
 
 ### Schema Validation with Zod
@@ -624,16 +538,13 @@ test("GET /api/items matches schema", async ({ request }) => {
 | ------------------------------------------------ | --------------------------- | ------------------------------ | ------------------------------------------------------------------ |
 | Validate response status/body/headers            | Yes                         | No                             | No browser needed; 10-100x faster                                  |
 | Test business logic (calculations, rules)        | Yes                         | No                             | API tests isolate backend logic from UI                            |
-| Verify form submission creates correct data      | Seed via API, submit via UI | Yes                            | UI test validates the form; API check confirms persistence         |
 | Test error messages shown to user                | No                          | Yes                            | Error rendering is a UI concern                                    |
 | Validate pagination, filtering, sorting          | Yes                         | Maybe both                     | API test for correctness; E2E test only if the UI logic is complex |
-| Seed test data for E2E tests                     | Yes (fixture)               | No                             | API seeding is fast and reliable                                   |
 | Test auth flows (login/logout/RBAC)              | Yes for token/session logic | Yes for UI flow                | Both matter: API protects resources, UI guides users               |
 | Verify file upload processing                    | Yes                         | Only if testing file picker UI | API test validates backend processing                              |
 | Contract/schema regression testing               | Yes                         | No                             | Schema tests run in milliseconds                                   |
 | Test third-party webhook handling                | Yes                         | No                             | Webhooks are API-to-API; no UI involved                            |
 | Verify redirect behavior after action            | No                          | Yes                            | Redirects are browser/navigation concerns                          |
-| Test real-time updates (WebSocket + API trigger) | API triggers                | E2E verifies                   | Seed via API, observe in browser                                   |
 
 ## Anti-Patterns
 
@@ -643,10 +554,7 @@ test("GET /api/items matches schema", async ({ request }) => {
 | Ignore `response.status()`                           | A 500 with a fallback body can pass all body assertions                                | Always assert status first: `expect(response.status()).toBe(200)` |
 | Skip response header checks                          | Missing `Content-Type`, `Cache-Control`, CORS headers cause production bugs            | Assert critical headers                                           |
 | Only test the happy path                             | Real users trigger 400, 401, 403, 404, 409, 422 — every one needs a test               | Dedicate a `describe` block to error responses                    |
-| Hardcode IDs in API tests                            | Tests break when database is reset or IDs are reassigned                               | Create resources in the test, use returned IDs                    |
-| Share mutable state between tests                    | Tests that depend on execution order are flaky and cannot run in parallel              | Each test creates and cleans up its own data                      |
 | Parse `response.text()` then `JSON.parse()` manually | Playwright's `response.json()` handles this and throws clear errors on non-JSON        | Use `await response.json()`                                       |
-| Forget cleanup after creating resources              | Test pollution: subsequent tests may see stale data or hit unique constraints          | Use fixtures with teardown or explicit `delete` calls             |
 | Use `page.request` when you don't need a page        | `page.request` shares cookies with the browser context, which may cause auth confusion | Use the standalone `request` fixture for pure API tests           |
 
 ## Troubleshooting
@@ -713,6 +621,6 @@ test("API call with browser auth", async ({ page }) => {
 
 ### Tests pass locally but fail in CI
 
-**Cause**: Different environments, database state, or missing environment variables.
+**Cause**: Different environments or missing environment variables.
 
-**Fix**: Use `process.env` for secrets and base URLs. Run database seeds or migrations in `globalSetup`. Use unique identifiers (timestamps, UUIDs) for test data. Check that the CI `baseURL` matches the deployed service.
+**Fix**: Use `process.env` for secrets and base URLs. Use unique identifiers (timestamps, UUIDs) for test data. Check that the CI `baseURL` matches the deployed service.

@@ -55,7 +55,7 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 | Test data            | `test-data.md`              | Factories, Faker, data-driven testing            |
 | Annotations          | `annotations.md`            | skip, fixme, slow, test steps                    |
 | Configuration        | `configuration.md`          | playwright.config.ts options                     |
-| Global setup         | `global-setup.md`           | globalSetup/Teardown, DB migrations              |
+| Global setup         | `global-setup.md`           | globalSetup/Teardown                             |
 | Projects             | `projects-dependencies.md`  | Project config, dependencies, filtering          |
 
 ### Debugging (`debugging/`)

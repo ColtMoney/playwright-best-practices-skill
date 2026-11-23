@@ -7,7 +7,6 @@
 3. [Fixture Scopes](#fixture-scopes)
 4. [Hooks](#hooks)
 5. [Authentication Patterns](#authentication-patterns)
-6. [Database Fixtures](#database-fixtures)
 
 ## Built-in Fixtures
 
@@ -108,22 +107,6 @@ export default defineConfig({
 });
 ```
 
-### Automatic Fixtures
-
-```typescript
-export const test = base.extend<{ setupDb: void }>({
-  // Auto-fixture runs for every test without explicit usage
-  setupDb: [
-    async ({}, use) => {
-      await seedDatabase();
-      await use();
-      await cleanDatabase();
-    },
-    { auto: true },
-  ],
-});
-```
-
 ## Fixture Scopes
 
 ### Test Scope (Default)
@@ -161,32 +144,6 @@ export const test = base.extend<{}, WorkerFixtures>({
   ],
 });
 ```
-
-### Isolate test data between parallel workers
-
-When tests in different workers touch the same backend or DB (e.g. same user, same tenant), they can collide and cause flaky failures. Use `testInfo.workerIndex` (or `process.env.TEST_WORKER_INDEX`) in a worker-scoped fixture to create unique data per worker:
-
-```typescript
-import { test as baseTest } from "@playwright/test";
-
-type WorkerFixtures = {
-  dbUserName: string;
-};
-
-export const test = baseTest.extend<{}, WorkerFixtures>({
-  dbUserName: [
-    async ({}, use, testInfo) => {
-      const userName = `user-${testInfo.workerIndex}`;
-      await createUserInTestDatabase(userName);
-      await use(userName);
-      await deleteUserFromTestDatabase(userName);
-    },
-    { scope: "worker" },
-  ],
-});
-```
-
-Then each worker uses a distinct user (e.g. `user-1`, `user-2`), so parallel workers do not overwrite each other’s data.
 
 ## Hooks
 
@@ -333,63 +290,6 @@ export const test = base.extend<{ adminPage: Page; userPage: Page }>({
 });
 ```
 
-## Database Fixtures
-
-This section covers **per-test database fixtures** (isolation, transaction rollback). For related topics:
-
-- **Test data factories** (builders, Faker): See [test-data.md](test-data.md)
-- **One-time database setup** (migrations, snapshots): See [global-setup.md](global-setup.md#database-patterns)
-
-### Transaction Rollback Pattern
-
-```typescript
-import { test as base } from "@playwright/test";
-import { db } from "../db";
-
-export const test = base.extend<{ dbTransaction: Transaction }>({
-  dbTransaction: async ({}, use) => {
-    const transaction = await db.beginTransaction();
-
-    await use(transaction);
-
-    await transaction.rollback(); // Clean slate for next test
-  },
-});
-```
-
-### Seed Data Fixture
-
-```typescript
-type TestData = {
-  testUser: User;
-  testProducts: Product[];
-};
-
-export const test = base.extend<TestData>({
-  testUser: async ({}, use) => {
-    const user = await db.users.create({
-      email: `test-${Date.now()}@example.com`,
-      name: "Test User",
-    });
-
-    await use(user);
-
-    await db.users.delete(user.id);
-  },
-
-  testProducts: async ({ testUser }, use) => {
-    const products = await db.products.createMany([
-      { name: "Product A", ownerId: testUser.id },
-      { name: "Product B", ownerId: testUser.id },
-    ]);
-
-    await use(products);
-
-    await db.products.deleteMany(products.map((p) => p.id));
-  },
-});
-```
-
 ## Fixture Tips
 
 | Tip                | Explanation                                 |
@@ -406,9 +306,7 @@ export const test = base.extend<TestData>({
 | ----------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Shared mutable state between tests        | Race conditions, order dependencies                        | Use fixtures for isolation                                                                                                                                                            |
 | Global variables in tests                 | Tests depend on execution order                            | Use fixtures or beforeEach for setup                                                                                                                                                  |
-| Not cleaning up test data                 | Tests interfere with each other                            | Use fixtures with teardown or database transactions                                                                                                                                   |
 | Shared `page` or `context` in `beforeAll` | State leak between tests; flaky when tests run in parallel | Use default one-context-per-test, or `beforeEach` + fresh page; if serial is required, prefer `test.describe.configure({ mode: 'serial' })` and document that isolation is sacrificed |
-| Backend/DB state shared across workers    | Tests in different workers collide on same data            | Use worker-scoped fixture with `testInfo.workerIndex` to create unique data per worker                                                                                                |
 
 ## Related References
 

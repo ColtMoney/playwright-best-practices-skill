@@ -30,7 +30,6 @@ Avoid:
 
 - sharing a `page` or browser context through `beforeAll`;
 - depending on test execution order;
-- using the same user or database record in parallel tests;
 - storing mutable test state in module-level variables.
 
 Use `beforeEach` for per-test navigation:
@@ -109,7 +108,6 @@ npx playwright test --workers=1
 npx playwright test --repeat-each=10
 ```
 
-If a failure disappears with `--workers=1`, check for shared users, database records, files, ports, or mutable variables.
 
 Use the HTML report to find slow tests. Optimize the slowest setup and navigation steps before increasing the worker count.
 

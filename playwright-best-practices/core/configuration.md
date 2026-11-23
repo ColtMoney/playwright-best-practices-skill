@@ -60,7 +60,6 @@ DEBUG=pw:api npx playwright test              # verbose logging
 
 | Need | Use |
 |------|-----|
-| One-time DB seed | `globalSetup` |
 | Shared browser auth | Setup project with `dependencies` |
 | Per-test isolated state | Custom fixture via `test.extend()` |
 | Cleanup after all tests | `globalTeardown` |
@@ -225,46 +224,9 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       NODE_ENV: 'test',
-      DB_URL: process.env.DB_URL || 'postgresql://localhost:5432/testdb',
     },
   },
 });
-```
-
-### globalSetup / globalTeardown
-
-**Use when**: One-time non-browser work like seeding a database. Runs once per test run.
-
-```ts
-// playwright.config.ts
-import { defineConfig } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './e2e',
-  globalSetup: './e2e/setup.ts',
-  globalTeardown: './e2e/teardown.ts',
-});
-```
-
-```ts
-// e2e/setup.ts
-import { FullConfig } from '@playwright/test';
-
-export default async function globalSetup(config: FullConfig) {
-  const { execSync } = await import('child_process');
-  execSync('npx prisma db seed', { stdio: 'inherit' });
-  process.env.TEST_RUN_ID = `run-${Date.now()}`;
-}
-```
-
-```ts
-// e2e/teardown.ts
-import { FullConfig } from '@playwright/test';
-
-export default async function globalTeardown(config: FullConfig) {
-  const { execSync } = await import('child_process');
-  execSync('npx prisma db push --force-reset', { stdio: 'inherit' });
-}
 ```
 
 ### Environment Variables with .env

@@ -13,7 +13,7 @@
 Use all three patterns together. Most projects benefit from a hybrid approach:
 
 - **Page objects** for UI interaction (pages/components with 5+ interactions)
-- **Custom fixtures** for test infrastructure (auth state, database, API clients, anything with lifecycle)
+- **Custom fixtures** for test infrastructure (auth state, API clients, anything with lifecycle)
 - **Helper functions** for stateless utilities (generate data, format values, simple waits)
 
 If only using one pattern, choose **custom fixtures** — they handle setup/teardown, compose well, and Playwright is built around them.
@@ -45,7 +45,7 @@ What kind of reusable code?
 |       +-- NO --> PAGE OBJECT method or HELPER
 |
 +-- Manages resource with lifecycle (create/destroy)?
-|   +-- Examples: auth state, DB connection, API client, test user
+|   +-- Examples: auth state, API client, test user
 |   +-- YES --> CUSTOM FIXTURE (always)
 |
 +-- Stateless utility? (no browser, no side effects)
@@ -127,7 +127,7 @@ test('complete reservation with standard room', async ({ page }) => {
 
 ## Custom Fixtures
 
-Best for resources needing setup before and teardown after tests — auth state, database connections, API clients, test users.
+Best for resources needing setup before and teardown after tests — auth state, API clients, test users.
 
 ```typescript
 // fixtures/base.fixture.ts
@@ -261,7 +261,6 @@ test('update account email', async ({ page }) => {
 tests/
 +-- fixtures/
 |   +-- auth.fixture.ts
-|   +-- db.fixture.ts
 |   +-- base.fixture.ts
 +-- page-objects/
 |   +-- login.page.ts
@@ -293,7 +292,7 @@ playwright.config.ts
 ### Page object managing resources
 
 ```typescript
-// BAD: page object handling API calls and database
+// BAD: page object handling API calls
 class LoginPage {
   async createUser() { /* API call */ }
   async deleteUser() { /* API call */ }

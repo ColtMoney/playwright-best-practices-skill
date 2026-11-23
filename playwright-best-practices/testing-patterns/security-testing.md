@@ -311,34 +311,6 @@ test("cannot access other user resources by changing ID", async ({
 
 ## Input Validation
 
-### Test SQL Injection Prevention
-
-```typescript
-test("SQL injection is prevented", async ({ page }) => {
-  const sqlPayloads = [
-    "'; DROP TABLE users; --",
-    "1' OR '1'='1",
-    "1; DELETE FROM orders",
-    "' UNION SELECT * FROM users --",
-  ];
-
-  for (const payload of sqlPayloads) {
-    await page.goto("/search");
-    await page.getByLabel("Search").fill(payload);
-    await page.getByRole("button", { name: "Search" }).click();
-
-    // Should not error (injection blocked/escaped)
-    await expect(page.getByText("Error")).not.toBeVisible();
-
-    // Should show no results or escaped text
-    const hasError = await page
-      .getByText(/database error|sql|syntax/i)
-      .isVisible();
-    expect(hasError).toBe(false);
-  }
-});
-```
-
 ### Test Input Length Limits
 
 ```typescript

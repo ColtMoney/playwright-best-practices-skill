@@ -69,61 +69,6 @@ COPY . .
 CMD ["npx", "playwright", "test", "--project=chromium"]
 ```
 
-### Docker Compose Stack
-
-Full application stack with database, cache, and test runner:
-
-```yaml
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=test
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/test
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:latest-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: test
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    tmpfs:
-      - /var/lib/postgresql/data
-
-  e2e:
-    image: mcr.microsoft.com/playwright:v1.48.0-noble
-    working_dir: /app
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - CI=true
-      - BASE_URL=http://app:3000
-    depends_on:
-      - app
-    command: bash -c "npm ci && npx playwright test"
-    profiles:
-      - test
-```
-
-Run commands:
-
-```bash
-docker compose --profile test up --abort-on-container-exit --exit-code-from e2e
-
-docker compose --profile test down -v
-```
-
 ### CI Container Jobs
 
 **GitHub Actions:**
@@ -171,7 +116,6 @@ VS Code Dev Container or GitHub Codespaces configuration:
 | Scenario | Approach |
 |---|---|
 | Simple CI pipeline | Official image as CI container |
-| Tests need database + cache | Docker Compose with app, db, e2e services |
 | Team needs identical environments | Dev Container or custom Dockerfile |
 | Only testing Chromium | Slim image with `install --with-deps chromium` |
 | Cross-browser testing | Official image (all browsers pre-installed) |
@@ -184,7 +128,6 @@ VS Code Dev Container or GitHub Codespaces configuration:
 | Installing browsers at runtime | Wastes 60-90 seconds per run | Use official image or bake browsers into custom image |
 | Running as non-root without sandbox config | Chromium sandbox permission errors | Run as root or disable sandbox |
 | Bind-mounting `node_modules` from host | Platform-specific binary crashes | Use anonymous volume: `-v /app/node_modules` |
-| No health checks on dependent services | Tests start before database ready | Add `healthcheck` with `depends_on: condition: service_healthy` |
 | Building application inside Playwright container | Large image, slow builds | Separate app and e2e containers |
 
 ## Troubleshooting

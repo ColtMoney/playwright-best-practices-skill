@@ -364,43 +364,6 @@ test("registers background sync", async ({ page }) => {
 });
 ```
 
-### Testing Sync Event
-
-```typescript
-test("sync event fires when online", async ({ context, page }) => {
-  await page.goto("/pwa-app");
-
-  // Queue data while offline
-  await context.setOffline(true);
-
-  await page.evaluate(async () => {
-    // Store data in IndexedDB for sync
-    const db = await openDB();
-    await db.put("sync-queue", { id: 1, data: "test" });
-
-    // Register sync
-    const reg = await navigator.serviceWorker.ready;
-    await (reg as any).sync.register("data-sync");
-  });
-
-  // Track sync completion
-  await page.evaluate(() => {
-    window.syncCompleted = false;
-    navigator.serviceWorker.addEventListener("message", (e) => {
-      if (e.data.type === "SYNC_COMPLETE") {
-        window.syncCompleted = true;
-      }
-    });
-  });
-
-  // Go online
-  await context.setOffline(false);
-
-  // Wait for sync to complete
-  await page.waitForFunction(() => window.syncCompleted, undefined, { timeout: 10000 });
-});
-```
-
 ## Anti-Patterns to Avoid
 
 | Anti-Pattern                   | Problem                 | Solution                                     |

@@ -1,9 +1,6 @@
 # Test Data Factories & Generators
 
-This file covers **reusable test data builders** (factories, Faker, data generators). For related topics:
-
-- **Per-test database fixtures** (isolation, transaction rollback): See [fixtures-hooks.md](fixtures-hooks.md#database-fixtures)
-- **One-time database setup** (migrations, snapshots): See [global-setup.md](global-setup.md#database-patterns)
+This file covers **reusable test data builders** (factories, Faker, data generators).
 
 ## Table of Contents
 
@@ -11,7 +8,6 @@ This file covers **reusable test data builders** (factories, Faker, data generat
 2. [Faker Integration](#faker-integration)
 3. [Data-Driven Testing](#data-driven-testing)
 4. [Test Data Fixtures](#test-data-fixtures)
-5. [Database Seeding](#database-seeding)
 
 ## Factory Pattern
 
@@ -389,89 +385,6 @@ test("add product to cart", async ({ page, testUser, testProducts }) => {
 
   await page.goto("/products");
   await expect(page.getByText(testProducts[0].name)).toBeVisible();
-});
-```
-
-## Database Seeding
-
-### API-Based Seeding
-
-```typescript
-// fixtures/seed.fixture.ts
-import { test as base, APIRequestContext } from "@playwright/test";
-import { createUser } from "../factories/user.factory";
-
-type SeedFixtures = {
-  seedUser: (overrides?: Partial<User>) => Promise<User>;
-  cleanupUsers: string[];
-};
-
-export const test = base.extend<SeedFixtures>({
-  seedUser: async ({ request, cleanupUsers }, use) => {
-    await use(async (overrides = {}) => {
-      const userData = createUser(overrides);
-
-      const response = await request.post("/api/test/users", {
-        data: userData,
-      });
-      const user = await response.json();
-
-      cleanupUsers.push(user.id);
-      return user;
-    });
-  },
-
-  // Cleanup after test
-  cleanupUsers: async ({ request }, use) => {
-    const userIds: string[] = [];
-    await use(userIds);
-
-    // Delete all created users
-    for (const id of userIds) {
-      await request.delete(`/api/test/users/${id}`);
-    }
-  },
-});
-
-// Usage
-test("user profile page", async ({ page, seedUser }) => {
-  const user = await seedUser({ name: "John Doe" });
-
-  await page.goto(`/users/${user.id}`);
-  await expect(page.getByText("John Doe")).toBeVisible();
-});
-```
-
-### Transaction Rollback Seeding
-
-```typescript
-// fixtures/db.fixture.ts
-export const test = base.extend<{ db: DbTransaction }>({
-  db: [
-    async ({}, use) => {
-      const client = await pool.connect();
-      await client.query("BEGIN");
-
-      await use({
-        query: (sql: string, params?: any[]) => client.query(sql, params),
-        seed: async (table: string, data: object) => {
-          const keys = Object.keys(data);
-          const values = Object.values(data);
-          const placeholders = keys.map((_, i) => `$${i + 1}`);
-
-          const result = await client.query(
-            `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *`,
-            values,
-          );
-          return result.rows[0];
-        },
-      });
-
-      await client.query("ROLLBACK");
-      client.release();
-    },
-    { scope: "test" },
-  ],
 });
 ```
 

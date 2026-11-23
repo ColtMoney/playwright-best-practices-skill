@@ -105,7 +105,6 @@ test.describe("Checkout Flow", () => {
 - Test critical user journeys
 - Keep tests independent
 - Use realistic data
-- Clean up test data in teardown
 
 ## API Tests
 
@@ -153,19 +152,6 @@ test("mocks based on request", async ({ page }) => {
   });
 });
 
-// Mock with delay (simulate slow network)
-test("handles slow API", async ({ page }) => {
-  await page.route("**/api/data", (route) =>
-    route.fulfill({
-      json: { data: "test" },
-      delay: 2000, // 2 second delay
-    })
-  );
-
-  await page.goto("/dashboard");
-  await expect(page.getByText("Loading...")).toBeVisible();
-  await expect(page.getByText("test")).toBeVisible();
-});
 ```
 
 ## Visual Regression Tests

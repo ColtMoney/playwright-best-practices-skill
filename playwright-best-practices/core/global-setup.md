@@ -4,10 +4,9 @@
 
 1. [Global Setup](#global-setup)
 2. [Global Teardown](#global-teardown)
-3. [Database Patterns](#database-patterns)
-4. [Environment Provisioning](#environment-provisioning)
-5. [Setup Projects vs Global Setup](#setup-projects-vs-global-setup)
-6. [Parallel Execution Caveats](#parallel-execution-caveats)
+3. [Environment Provisioning](#environment-provisioning)
+4. [Setup Projects vs Global Setup](#setup-projects-vs-global-setup)
+5. [Parallel Execution Caveats](#parallel-execution-caveats)
 
 ## Global Setup
 
@@ -19,7 +18,7 @@ import { FullConfig } from "@playwright/test";
 
 async function globalSetup(config: FullConfig) {
   console.log("Running global setup...");
-  // Perform one-time setup: start services, run migrations, etc.
+  // Perform one-time setup
 }
 
 export default globalSetup;
@@ -93,9 +92,6 @@ async function globalTeardown(config: FullConfig) {
     fs.rmSync(".auth", { recursive: true });
   }
 
-  // Clean up test data
-  await cleanupTestDatabase();
-
   // Stop services
   await stopTestServices();
 }
@@ -103,102 +99,6 @@ async function globalTeardown(config: FullConfig) {
 export default globalTeardown;
 ```
 
-### Conditional Teardown
-
-```typescript
-// global-teardown.ts
-async function globalTeardown(config: FullConfig) {
-  // Skip cleanup in CI (containers are discarded anyway)
-  if (process.env.CI) {
-    console.log("Skipping teardown in CI");
-    return;
-  }
-
-  // Local cleanup
-  await cleanupLocalTestData();
-}
-
-export default globalTeardown;
-```
-
-## Database Patterns
-
-This section covers **one-time database setup** (migrations, snapshots, per-worker databases). For related topics:
-
-- **Per-test database fixtures** (isolation, transaction rollback): See [fixtures-hooks.md](fixtures-hooks.md#database-fixtures)
-- **Test data factories** (builders, Faker): See [test-data.md](test-data.md)
-
-### Database Migration in Setup
-
-```typescript
-// global-setup.ts
-import { execSync } from "child_process";
-
-async function globalSetup() {
-  console.log("Running database migrations...");
-
-  // Run migrations
-  execSync("npx prisma migrate deploy", { stdio: "inherit" });
-
-  // Seed test data
-  execSync("npx prisma db seed", { stdio: "inherit" });
-}
-
-export default globalSetup;
-```
-
-### Database Snapshot Pattern
-
-```typescript
-// global-setup.ts
-import { execSync } from "child_process";
-import fs from "fs";
-
-const SNAPSHOT_PATH = "./test-db-snapshot.sql";
-
-async function globalSetup() {
-  // Check if snapshot exists
-  if (fs.existsSync(SNAPSHOT_PATH)) {
-    console.log("Restoring database from snapshot...");
-    execSync(`psql $DATABASE_URL < ${SNAPSHOT_PATH}`, { stdio: "inherit" });
-    return;
-  }
-
-  // First run: migrate and create snapshot
-  console.log("Creating database snapshot...");
-  execSync("npx prisma migrate deploy", { stdio: "inherit" });
-  execSync("npx prisma db seed", { stdio: "inherit" });
-  execSync(`pg_dump $DATABASE_URL > ${SNAPSHOT_PATH}`, { stdio: "inherit" });
-}
-
-export default globalSetup;
-```
-
-### Test Database per Worker
-
-```typescript
-// global-setup.ts
-async function globalSetup(config: FullConfig) {
-  const workerCount = config.workers || 1;
-
-  // Create a database for each worker
-  for (let i = 0; i < workerCount; i++) {
-    const dbName = `test_db_worker_${i}`;
-    await createDatabase(dbName);
-    await runMigrations(dbName);
-    await seedDatabase(dbName);
-  }
-}
-
-// global-teardown.ts
-async function globalTeardown(config: FullConfig) {
-  const workerCount = config.workers || 1;
-
-  for (let i = 0; i < workerCount; i++) {
-    await dropDatabase(`test_db_worker_${i}`);
-  }
-}
-```
 
 ## Environment Provisioning
 
@@ -256,10 +156,6 @@ async function globalSetup() {
     stdio: "inherit",
   });
 
-  // Wait for services to be healthy
-  execSync("docker-compose -f docker-compose.test.yml exec -T db pg_isready", {
-    stdio: "inherit",
-  });
 }
 
 export default globalSetup;
@@ -293,7 +189,7 @@ async function globalSetup() {
   dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
   // Validate required variables
-  const required = ["DATABASE_URL", "API_KEY", "TEST_EMAIL"];
+  const required = ["API_KEY", "TEST_EMAIL"];
   for (const key of required) {
     if (!process.env[key]) {
       throw new Error(`Missing required environment variable: ${key}`);
@@ -310,7 +206,6 @@ export default globalSetup;
 
 | Use Global Setup                      | Use Setup Projects                       |
 | ------------------------------------- | ---------------------------------------- |
-| One-time setup (migrations, services) | Per-project setup (auth states)          |
 | No access to Playwright fixtures      | Need page, request fixtures              |
 | Runs once before all projects         | Can run per-project or have dependencies |
 | Shared across all workers             | Can be parallelized                      |
@@ -348,7 +243,6 @@ export default defineConfig({
 ```typescript
 // playwright.config.ts
 export default defineConfig({
-  // Global: Start services, run migrations
   globalSetup: require.resolve("./global-setup"),
   globalTeardown: require.resolve("./global-teardown"),
 
@@ -397,7 +291,6 @@ Use **worker-scoped fixtures** instead of globalSetup when:
 
 | Scenario                             | Why Fixtures Are Better                              |
 | ------------------------------------ | ---------------------------------------------------- |
-| Each worker needs isolated resources | Fixtures can create per-worker databases, servers    |
 | Setup needs Playwright APIs          | Worker fixtures can use `browser` and `playwright`; `page`, `context`, and `request` are test-scoped |
 | Setup depends on test configuration  | Fixtures receive test context and options            |
 | Resources need cleanup per worker    | Worker fixtures auto-cleanup when worker exits       |
@@ -413,8 +306,6 @@ async function globalSetup() {
 // ✅ GOOD: Each worker gets its own user via worker-scoped fixture
 // Uses workerInfo.workerIndex to create unique data per worker
 ```
-
-> **For worker-scoped fixture patterns** (per-worker databases, unique test data, `workerIndex` isolation), see [fixtures-hooks.md](fixtures-hooks.md#isolate-test-data-between-parallel-workers).
 
 ## Anti-Patterns to Avoid
 

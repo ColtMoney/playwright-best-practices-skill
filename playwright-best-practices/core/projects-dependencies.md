@@ -164,41 +164,6 @@ export default defineConfig({
 });
 ```
 
-### Chained Dependencies
-
-```typescript
-export default defineConfig({
-  projects: [
-    // Step 1: Database setup
-    {
-      name: "db-setup",
-      testMatch: /db\.setup\.ts/,
-    },
-
-    // Step 2: Auth setup (needs DB)
-    {
-      name: "auth-setup",
-      testMatch: /auth\.setup\.ts/,
-      dependencies: ["db-setup"],
-    },
-
-    // Step 3: Seed data (needs auth)
-    {
-      name: "seed-setup",
-      testMatch: /seed\.setup\.ts/,
-      dependencies: ["auth-setup"],
-    },
-
-    // Tests (need everything)
-    {
-      name: "tests",
-      testDir: "./tests",
-      dependencies: ["seed-setup"],
-    },
-  ],
-});
-```
-
 ## Setup Projects
 
 ### Authentication Setup
@@ -206,36 +171,6 @@ export default defineConfig({
 Setup projects are the recommended way to handle authentication. They run before your main test projects and can use Playwright fixtures.
 
 > **For complete authentication patterns** (storage state, multiple auth states, auth fixtures), see [fixtures-hooks.md](fixtures-hooks.md#authentication-patterns).
-
-### Data Seeding Setup
-
-```typescript
-// seed.setup.ts
-import { test as setup } from "@playwright/test";
-
-setup("seed test data", async ({ request }) => {
-  // Create test data via API
-  await request.post("/api/test/seed", {
-    data: {
-      users: 10,
-      products: 50,
-      orders: 100,
-    },
-  });
-});
-```
-
-### Cleanup Setup
-
-```typescript
-// cleanup.setup.ts
-import { test as setup } from "@playwright/test";
-
-setup("cleanup previous run", async ({ request }) => {
-  // Clean up data from previous test runs
-  await request.delete("/api/test/cleanup");
-});
-```
 
 ## Filtering & Running Projects
 
@@ -403,37 +338,6 @@ export default defineConfig({
 test("example", async ({ page }, testInfo) => {
   const { platform, priority } = testInfo.project.metadata;
   console.log(`Running on ${platform} with ${priority} priority`);
-});
-```
-
-### Teardown Projects
-
-```typescript
-export default defineConfig({
-  projects: [
-    {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
-      teardown: "teardown", // Run teardown after this completes
-    },
-    {
-      name: "teardown",
-      testMatch: /.*\.teardown\.ts/,
-    },
-    {
-      name: "tests",
-      dependencies: ["setup"],
-    },
-  ],
-});
-```
-
-```typescript
-// cleanup.teardown.ts
-import { test as teardown } from "@playwright/test";
-
-teardown("cleanup", async ({ request }) => {
-  await request.delete("/api/test/data");
 });
 ```
 
