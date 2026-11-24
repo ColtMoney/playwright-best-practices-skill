@@ -11,7 +11,7 @@ Use a readable local reporter, an HTML report, and concise GitHub Actions output
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
 
   reporter: process.env.CI
     ? [
@@ -25,7 +25,7 @@ export default defineConfig({
       ],
 
   use: {
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
@@ -37,7 +37,7 @@ This configuration provides:
 - readable test output locally;
 - annotations in GitHub Actions;
 - an HTML report after the run;
-- traces for retried tests;
+- traces for failed tests;
 - screenshots and videos for failed tests.
 
 ## Viewing Reports and Traces
@@ -72,7 +72,7 @@ Reports and attachments can contain passwords, tokens, request data, screenshots
 | Setting | Recommended value |
 |---|---|
 | HTML report | Optional in CI |
-| Trace | `on-first-retry` |
+| Trace | `retain-on-failure` |
 | Screenshot | `only-on-failure` |
 | Video | `retain-on-failure` |
 | Report retention | 7–14 days |
@@ -85,14 +85,6 @@ Avoid `trace: 'on'` and `video: 'on'` in CI because they create large artifacts 
 
 Make sure the HTML reporter is configured and that the complete `playwright-report/` directory is preserved.
 
-### A failed test has no trace
-
-`trace: 'on-first-retry'` records a trace only when the test is retried. Enable retries in CI:
-
-```typescript
-retries: process.env.CI ? 2 : 0,
-```
-
 ### Reports use too much storage
 
-Keep screenshots and videos only for failed tests, use traces only on retry, and limit artifact retention to 7–14 days.
+Keep screenshots, videos, and traces only for failed tests, and limit artifact retention to 7–14 days.
