@@ -255,4 +255,3 @@ After writing or modifying tests:
    - Fix locators, waits, or assertions
    - Re-run tests
 3. **Only proceed when all tests pass**
-4. **Run multiple times** for critical tests: `npx playwright test --repeat-each=5`

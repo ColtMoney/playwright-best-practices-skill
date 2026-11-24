@@ -52,26 +52,26 @@ npx playwright show-trace test-results/path-to-test/trace.zip
 
 You can also open traces at [trace.playwright.dev](https://trace.playwright.dev/).
 
-## Uploading the Report in GitHub Actions
+## Optional: Uploading the Report in GitHub Actions
 
-Upload the HTML report even when tests fail:
+If project policy allows it, upload the HTML report after test failures:
 
 ```yaml
 - uses: actions/upload-artifact@v4
-  if: ${{ !cancelled() }}
+  if: ${{ failure() }}
   with:
     name: playwright-report
     path: playwright-report/
     retention-days: 14
 ```
 
-The HTML report contains the attachments needed to investigate failures. Preserve the entire `playwright-report/` directory.
+Reports and attachments can contain passwords, tokens, request data, screenshots, and other sensitive information. Do not upload them unless artifact access and retention comply with project policy.
 
 ## Practical Defaults
 
 | Setting | Recommended value |
 |---|---|
-| HTML report | Always enabled |
+| HTML report | Optional in CI |
 | Trace | `on-first-retry` |
 | Screenshot | `only-on-failure` |
 | Video | `retain-on-failure` |
