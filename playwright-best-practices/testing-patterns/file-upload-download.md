@@ -101,7 +101,15 @@ test('format selector changes output extension', async ({ page }) => {
 test('download response has correct MIME type', async ({ page }) => {
   await page.goto('/analytics');
 
-  const responsePromise = page.waitForResponse('**/api/analytics/export**');
+  const responsePromise = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    const expectedUrl = new URL('/api/analytics/export', page.url());
+    return (
+      url.origin === expectedUrl.origin &&
+      url.pathname === expectedUrl.pathname &&
+      response.request().method() === 'GET'
+    );
+  });
   const downloadPromise = page.waitForEvent('download');
 
   await page.getByRole('button', { name: 'Export PDF' }).click();
@@ -274,11 +282,11 @@ test('shows visual feedback on drag-over', async ({ page }) => {
   });
   await dropZone.dispatchEvent('dragenter', { dataTransfer });
 
-  await expect(dropZone).toHaveClass(/active|highlight|drag-over/);
-  await expect(dropZone).toContainText(/release|drop now/i);
+  const dragHint = dropZone.getByText(/release|drop now/i);
+  await expect(dragHint).toBeVisible();
 
   await dropZone.dispatchEvent('dragleave');
-  await expect(dropZone).not.toHaveClass(/active|highlight|drag-over/);
+  await expect(dragHint).not.toBeVisible();
 });
 ```
 

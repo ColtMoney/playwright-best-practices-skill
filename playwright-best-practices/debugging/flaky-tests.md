@@ -185,18 +185,18 @@ await page.waitForTimeout(3000); // Hope data loads in 3s
 
 // ✅ GOOD: Wait for specific condition
 await page.click("#load-data");
-await expect(page.locator(".data-row")).toHaveCount(10, { timeout: 10000 });
+await expect(page.getByTestId("data-row")).toHaveCount(10, { timeout: 10000 });
 
 // ✅ BETTER: Wait for network response, then assert
 const responsePromise = page.waitForResponse(
   (r) =>
-    r.url().includes("/api/data") &&
+    r.url() === new URL("/api/data", page.url()).href &&
     r.request().method() === "GET" &&
     r.ok(),
 );
 await page.click("#load-data");
 await responsePromise;
-await expect(page.locator(".data-row")).toHaveCount(10);
+await expect(page.getByTestId("data-row")).toHaveCount(10);
 ```
 
 > **For comprehensive waiting strategies** (navigation, element state, network, polling with `toPass()`), see [assertions-waiting.md](../core/assertions-waiting.md#waiting-strategies).
@@ -212,8 +212,16 @@ await page.waitForFunction(() => {
 
 // Wait for multiple conditions
 await Promise.all([
-  page.waitForResponse("**/api/user"),
-  page.waitForResponse("**/api/settings"),
+  page.waitForResponse(
+    (response) =>
+      response.url() === new URL("/api/user", page.url()).href &&
+      response.request().method() === "GET",
+  ),
+  page.waitForResponse(
+    (response) =>
+      response.url() === new URL("/api/settings", page.url()).href &&
+      response.request().method() === "GET",
+  ),
   page.getByRole("button", { name: "Load" }).click(),
 ]);
 ```
@@ -454,12 +462,12 @@ test.describe("User profile", () => {
 
 ```typescript
 // ❌ BAD: Single point of failure
-await expect(page.locator(".items")).toHaveCount(5);
+await expect(page.getByTestId("item")).toHaveCount(5);
 
 // ✅ GOOD: Progressive assertions that help diagnose
-await expect(page.locator(".items-container")).toBeVisible();
-await expect(page.locator(".loading")).not.toBeVisible();
-await expect(page.locator(".items")).toHaveCount(5);
+await expect(page.getByTestId("items")).toBeVisible();
+await expect(page.getByText("Loading...")).not.toBeVisible();
+await expect(page.getByTestId("item")).toHaveCount(5);
 ```
 
 ### Retry Budget

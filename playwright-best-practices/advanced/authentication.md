@@ -698,7 +698,11 @@ Need to test the login page itself?
 - Add error handling to the setup test:
 
 ```typescript
-const response = await page.waitForResponse("**/api/auth/**");
+const response = await page.waitForResponse(
+  (response) =>
+    response.url() === new URL("/api/auth/login", page.url()).href &&
+    response.request().method() === "POST",
+);
 if (!response.ok()) {
   throw new Error(
     `Login failed in setup project: ${response.status()} ${await response.text()}`

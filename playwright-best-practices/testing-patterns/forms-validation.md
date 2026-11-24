@@ -61,7 +61,15 @@ test("typeahead with API-driven suggestions", async ({ page }) => {
   await page.goto("/shipping");
 
   const streetField = page.getByLabel("Street");
-  const responsePromise = page.waitForResponse("**/api/address-lookup*");
+  const responsePromise = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    const expectedUrl = new URL("/api/address-lookup", page.url());
+    return (
+      url.origin === expectedUrl.origin &&
+      url.pathname === expectedUrl.pathname &&
+      response.request().method() === "GET"
+    );
+  });
   await streetField.pressSequentially("456 Elm", { delay: 50 });
 
   await responsePromise;
@@ -224,7 +232,11 @@ test("successful form submission shows confirmation", async ({ page }) => {
   await page.getByLabel("Email").fill("user@test.com");
   await page.getByLabel("Details").fill("Please add dark mode");
 
-  const responsePromise = page.waitForResponse("**/api/feedback");
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.url() === new URL("/api/feedback", page.url()).href &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Submit feedback" }).click();
   const response = await responsePromise;
 

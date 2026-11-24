@@ -317,13 +317,6 @@ test.describe('composition API', () => {
     await expect(page.getByText('Black Hoodie')).toBeVisible();
   });
 
-  test('provide/inject updates all consumers', async ({ page }) => {
-    await page.goto('/home');
-
-    await page.getByRole('switch', { name: 'Dark theme' }).click();
-
-    await expect(page.locator('body')).toHaveClass(/dark/);
-  });
 });
 ```
 

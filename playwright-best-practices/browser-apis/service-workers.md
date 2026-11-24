@@ -285,11 +285,11 @@ test("app works offline", async ({ page, context }) => {
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 
   // Verify offline indicator
-  await expect(page.locator(".offline-badge")).toBeVisible();
+  await expect(page.getByText("Offline")).toBeVisible();
 
   // Go back online
   await context.setOffline(false);
-  await expect(page.locator(".offline-badge")).not.toBeVisible();
+  await expect(page.getByText("Offline")).not.toBeVisible();
 });
 ```
 

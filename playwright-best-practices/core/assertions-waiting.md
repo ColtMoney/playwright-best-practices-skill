@@ -39,10 +39,6 @@ await expect(page.getByRole("listitem")).toHaveCount(5);
 await expect(page.getByRole("link")).toHaveAttribute("href", "/home");
 await expect(page.getByRole("img")).toHaveAttribute("alt", /logo/i);
 
-// CSS
-await expect(page.getByRole("button")).toHaveClass(/primary/);
-await expect(page.getByRole("button")).toHaveCSS("color", "rgb(0, 0, 255)");
-
 // Input values
 await expect(page.getByLabel("Email")).toHaveValue("user@example.com");
 await expect(page.getByLabel("Email")).toBeEmpty();

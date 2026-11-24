@@ -176,7 +176,10 @@ When debugging network-dependent issues, wait for specific API responses instead
 ```typescript
 // Start waiting BEFORE triggering the request
 const responsePromise = page.waitForResponse(
-  (resp) => resp.url().includes("/api/data") && resp.status() === 200,
+  (resp) =>
+    resp.url() === new URL("/api/data", page.url()).href &&
+    resp.request().method() === "GET" &&
+    resp.status() === 200,
 );
 await page.getByRole("button", { name: "Load" }).click();
 const response = await responsePromise;
