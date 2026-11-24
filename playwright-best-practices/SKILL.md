@@ -1,6 +1,6 @@
 ---
 name: playwright-best-practices
-description: Use when writing Playwright tests, fixing flaky tests, debugging failures, implementing Page Object Model, configuring CI/CD, optimizing performance, mocking APIs, handling authentication or OAuth, file uploads/downloads, date/time mocking, WebSockets, multi-tab/popup flows, mobile/responsive layouts, touch gestures, error handling, offline mode, multi-user collaboration, console error monitoring, global setup/teardown, test annotations (skip, fixme, slow), test tags (@smoke, @fast, @critical, filtering with --grep), project dependencies, security testing (XSS, CSRF, auth), and service workers/PWA. Covers E2E, visual, and security testing.
+description: Use when writing Playwright tests, fixing flaky tests, debugging failures, implementing Page Object Model, configuring CI/CD, optimizing performance, mocking APIs, handling authentication or OAuth, file uploads/downloads, date/time mocking, WebSockets, multi-tab/popup flows, mobile/responsive layouts, touch gestures, error handling, offline mode, multi-user collaboration, console error monitoring, global setup/teardown, test annotations (skip, fixme, slow), test tags (@smoke, @fast, @critical, filtering with --grep), project dependencies, and security testing (XSS, CSRF, auth). Covers E2E, visual, and security testing.
 license: MIT
 metadata:
   author: currents.dev
@@ -78,8 +78,7 @@ Consult these references based on what you're doing:
 | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | **Error boundary testing**     | [error-testing.md](debugging/error-testing.md)                                                        |
 | **Network failure simulation** | [error-testing.md](debugging/error-testing.md)                                                    |
-| **Offline mode testing**       | [error-testing.md](debugging/error-testing.md), [service-workers.md](browser-apis/service-workers.md) |
-| **Service worker testing**     | [service-workers.md](browser-apis/service-workers.md)                                                 |
+| **Offline mode testing**       | [error-testing.md](debugging/error-testing.md)                                                        |
 | **Loading state testing**      | [error-testing.md](debugging/error-testing.md)                                                        |
 | **Form validation testing**    | [error-testing.md](debugging/error-testing.md)                                                        |
 
@@ -175,7 +174,6 @@ What are you doing?
 │  ├─ Date/time dependent → advanced/clock-mocking.md
 │  ├─ WebSocket/real-time → browser-apis/websockets.md
 │  ├─ OAuth popup flow → advanced/multi-context.md
-│  ├─ Service workers/PWA → browser-apis/service-workers.md
 │  ├─ Security (XSS, CSRF) → testing-patterns/security-testing.md
 │
 ├─ Architecture decisions?
@@ -203,7 +201,6 @@ What are you doing?
 ├─ Testing error scenarios?
 │  ├─ Network failures → debugging/error-testing.md
 │  ├─ Offline (unexpected) → debugging/error-testing.md
-│  ├─ Offline-first/PWA → browser-apis/service-workers.md
 │  ├─ Error boundaries → debugging/error-testing.md
 │  └─ Form validation → testing-patterns/forms-validation.md, debugging/error-testing.md
 │

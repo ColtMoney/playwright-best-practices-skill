@@ -24,7 +24,6 @@ The skill triggers when the AI infers you need help with things like:
 - Testing mobile/responsive layouts, touch gestures, or device emulation
 - Implementing file uploads/downloads, date/time mocking, or WebSocket testing
 - Handling OAuth popups or multi-tab flows
-- Testing service workers or PWA features
 - Testing error states, offline mode, or network failure scenarios
 - Security testing (XSS, CSRF, authentication, authorization)
 - Reviewing or refactoring Playwright test code
@@ -36,7 +35,7 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 
 ## What's Inside
 
-**36 reference documents** organized into 8 categories:
+**35 reference documents** organized into 8 categories:
 
 ### Core (`core/`)
 
@@ -89,7 +88,6 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 | Topic           | Reference            | Use for                                     |
 | --------------- | -------------------- | ------------------------------------------- |
 | WebSockets      | `websockets.md`      | Real-time testing, SSE, reconnection        |
-| Service workers | `service-workers.md` | PWA, caching, offline                       |
 
 ### Architecture (`architecture/`)
 
