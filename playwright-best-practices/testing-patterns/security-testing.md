@@ -11,35 +11,6 @@
 
 ## XSS Prevention
 
-### Test Reflected XSS
-
-```typescript
-test("input is properly escaped", async ({ page }) => {
-  const xssPayloads = [
-    '<script>alert("xss")</script>',
-    '<img src="x" onerror="alert(1)">',
-    '"><script>alert(1)</script>',
-    "javascript:alert(1)",
-    '<svg onload="alert(1)">',
-  ];
-
-  for (const payload of xssPayloads) {
-    await page.goto(`/search?q=${encodeURIComponent(payload)}`);
-
-    // Verify script didn't execute
-    const alertTriggered = await page.evaluate(() => {
-      return (window as any).__xssTriggered === true;
-    });
-    expect(alertTriggered).toBe(false);
-
-    // Verify payload is escaped in HTML
-    const content = await page.content();
-    expect(content).not.toContain("<script>alert");
-    expect(content).not.toContain("onerror=");
-  }
-});
-```
-
 ### Test Stored XSS
 
 ```typescript

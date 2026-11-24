@@ -188,7 +188,7 @@ What are you doing?
 │
 ├─ Authentication testing?
 │  ├─ Basic auth patterns → advanced/authentication.md
-│  └─ Complex flows (MFA, reset) → advanced/authentication-flows.md
+│  └─ Complex flows (reset) → advanced/authentication-flows.md
 │
 ├─ Test is failing/flaky?
 │  ├─ Flaky test investigation → debugging/flaky-tests.md

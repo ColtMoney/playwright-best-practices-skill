@@ -8,7 +8,7 @@
 4. [Tips](#tips)
 5. [Related](#related)
 
-> **When to use**: Testing password reset, session timeout/expiration, or logout flows. For basic auth setup (storage state, MFA, role-based access), see [authentication.md](authentication.md).
+> **When to use**: Testing password reset, session timeout/expiration, or logout flows. For basic auth setup (storage state, role-based access), see [authentication.md](authentication.md).
 
 ---
 
@@ -217,5 +217,5 @@ test('logs out from all devices', async ({ page }) => {
 
 ## Related
 
-- [authentication.md](authentication.md) — Storage state, MFA, role-based access, API login
+- [authentication.md](authentication.md) — Storage state, role-based access, API login
 - [fixtures-hooks.md](../core/fixtures-hooks.md) — Creating auth fixtures

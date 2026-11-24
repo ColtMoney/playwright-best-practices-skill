@@ -78,7 +78,7 @@ You don't have to mention "skill" or "Playwright best practices"; describe your 
 | Topic            | Reference               | Use for                                     |
 | ---------------- | ----------------------- | ------------------------------------------- |
 | Authentication   | `authentication.md`     | Login flows, session storage, cookies       |
-| Auth flows       | `authentication-flows.md` | MFA, password reset, complex auth         |
+| Auth flows       | `authentication-flows.md` | Password reset, complex auth              |
 | Mobile testing   | `mobile-testing.md`     | Device emulation, touch gestures, viewports |
 | Clock mocking    | `clock-mocking.md`      | Date/time mocking, timezones, timers        |
 | Multi-context    | `multi-context.md`      | Popups, new tabs, OAuth flows               |

@@ -135,57 +135,6 @@ export default defineConfig({
 
 Add `.auth/` to `.gitignore`. Auth state files contain session tokens and should never be committed.
 
-### Per-Worker Authentication
-
-**Use when**: Each parallel worker needs its own authenticated session to avoid race conditions for tests that modify server-side state.
-**Avoid when**: Tests are read-only and a modifying shared session is safe, you can use a single shared account.
-
-```typescript
-// fixtures/auth.ts
-import { test as base, type BrowserContext } from "@playwright/test";
-
-type AuthFixtures = {
-  authenticatedContext: BrowserContext;
-};
-
-export const test = base.extend<{}, AuthFixtures>({
-  authenticatedContext: [
-    async ({ browser }, use) => {
-      const context = await browser.newContext();
-      const page = await context.newPage();
-
-      await page.goto("/login");
-      await page
-        .getByLabel("Username")
-        .fill(`worker-${test.info().parallelIndex}@example.com`);
-      await page.getByLabel("Password").fill("secretPass123");
-      await page.getByRole("button", { name: "Log in" }).click();
-      await page.waitForURL("/home");
-      await page.close();
-
-      await use(context);
-      await context.close();
-    },
-    { scope: "worker" },
-  ],
-});
-
-export { expect } from "@playwright/test";
-```
-
-```typescript
-// tests/settings.spec.ts
-import { test, expect } from "../fixtures/auth";
-
-test("update display name", async ({ authenticatedContext }) => {
-  const page = await authenticatedContext.newPage();
-  await page.goto("/settings/profile");
-  await page.getByLabel("Display name").fill("Updated Name");
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Profile saved")).toBeVisible();
-});
-```
-
 ### Multiple Roles
 
 **Use when**: Your app has role-based access control and you need to test different permission levels.
@@ -605,7 +554,6 @@ test.describe("unauthenticated access", () => {
 | Tests modify user state          | Per-worker fixture             | Fast     | Per worker     | Tests update profile, change settings, or mutate data          |
 | Multiple user roles              | Per-project `storageState`     | Fastest  | Per role       | App has admin/member/guest roles                               |
 | Testing the login page           | No `storageState`              | N/A      | Full           | Use `test.use({ storageState: { cookies: [], origins: [] } })` |
-| MFA is required                  | TOTP generation or bypass      | Moderate | Per test       | Generate real TOTP codes or use a test-mode bypass             |
 | Token expires mid-suite          | Session refresh fixture        | Fast     | Per check      | Fixture validates the session before use                       |
 | Single test needs different user | `loginAs(role)` fixture        | Moderate | Per call       | Rare: prefer per-project roles                                 |
 | API-first app (no login UI)      | API login via `request.post()` | Fastest  | Per test       | No browser needed for auth                                     |
@@ -635,7 +583,6 @@ Need to test the login page itself?
 | Store `.auth/*.json` files in git                                         | Tokens in version control                   | Add `.auth/` to `.gitignore`                                              |
 | Create one "god" test account with all permissions                        | Cannot test role-based access control       | Create separate accounts per role                                         |
 | Use `browser.newContext()` without `storageState` for authenticated tests | Every context starts unauthenticated        | Pass `storageState` when creating the context                             |
-| Test MFA by disabling it everywhere                                       | You never test the MFA flow                 | Use TOTP generation for at least one test                                 |
 
 ## Troubleshooting
 
@@ -718,7 +665,6 @@ projects: [
 **Fix**:
 
 - Use per-worker test accounts: `worker-${test.info().parallelIndex}@example.com`
-- Use the per-worker authentication fixture pattern
 - Make tests idempotent
 
 ## Related

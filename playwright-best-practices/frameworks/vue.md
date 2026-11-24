@@ -257,25 +257,6 @@ test.describe('transitions', () => {
     await expect(page.getByText('Temp item')).toBeHidden();
   });
 
-  test('disable animations for faster tests', async ({ page }) => {
-    await page.addStyleTag({
-      content: `
-        *, *::before, *::after {
-          animation-duration: 0s !important;
-          animation-delay: 0s !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-        }
-      `,
-    });
-
-    await page.goto('/tasks');
-
-    await page.getByRole('textbox', { name: 'Task' }).fill('Quick task');
-    await page.getByRole('button', { name: 'Add' }).click();
-
-    await expect(page.getByText('Quick task')).toBeVisible();
-  });
 });
 ```
 

@@ -13,7 +13,7 @@
 **Ideal for**:
 
 - Critical user flows that generate revenue (checkout, signup)
-- Authentication flows (login, SSO, MFA, password reset)
+- Authentication flows (login, SSO, password reset)
 - Multi-page workflows where state carries across navigation
 - Smoke tests validating the entire stack
 - Real-time collaboration requiring multiple browser contexts

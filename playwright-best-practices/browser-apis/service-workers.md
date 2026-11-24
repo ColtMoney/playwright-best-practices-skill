@@ -72,49 +72,6 @@ test("access service worker", async ({ context, page }) => {
 
 ## Registration & Lifecycle
 
-### Testing SW Update Flow
-
-```typescript
-test("service worker updates", async ({ page }) => {
-  await page.goto("/pwa-app");
-
-  // Check for update
-  const hasUpdate = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
-    await registration.update();
-
-    return new Promise<boolean>((resolve) => {
-      if (registration.waiting) {
-        resolve(true);
-      } else {
-        registration.addEventListener("updatefound", () => {
-          resolve(true);
-        });
-        // Timeout if no update
-        setTimeout(() => resolve(false), 5000);
-      }
-    });
-  });
-
-  // If update found, test skip waiting flow
-  if (hasUpdate) {
-    await page.evaluate(async () => {
-      const registration = await navigator.serviceWorker.ready;
-      registration.waiting?.postMessage({ type: "SKIP_WAITING" });
-    });
-
-    // Wait for controller change
-    await page.evaluate(() => {
-      return new Promise<void>((resolve) => {
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          resolve();
-        });
-      });
-    });
-  }
-});
-```
-
 ### Testing SW Installation
 
 ```typescript
@@ -197,17 +154,20 @@ test("cache-first strategy", async ({ page }) => {
   // Block network for cached resources
   await page.route("**/styles.css", (route) => route.abort());
 
+  const cssResponsePromise = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return (
+      url.origin === new URL(page.url()).origin &&
+      url.pathname === "/styles.css" &&
+      response.request().method() === "GET"
+    );
+  });
+
   // Reload - should work from cache
   await page.reload();
 
-  // Verify page still styled (CSS loaded from cache)
-  const hasStyles = await page.evaluate(() => {
-    const body = document.body;
-    const styles = window.getComputedStyle(body);
-    return styles.fontFamily !== ""; // Has custom font from CSS
-  });
-
-  expect(hasStyles).toBe(true);
+  const cssResponse = await cssResponsePromise;
+  expect(cssResponse.fromServiceWorker()).toBe(true);
 });
 ```
 

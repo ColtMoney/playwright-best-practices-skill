@@ -191,11 +191,11 @@ await expect(page.getByTestId("data-row")).toHaveCount(10, { timeout: 10000 });
 const responsePromise = page.waitForResponse(
   (r) =>
     r.url() === new URL("/api/data", page.url()).href &&
-    r.request().method() === "GET" &&
-    r.ok(),
+    r.request().method() === "GET",
 );
 await page.click("#load-data");
-await responsePromise;
+const response = await responsePromise;
+expect(response.status()).toBe(200);
 await expect(page.getByTestId("data-row")).toHaveCount(10);
 ```
 

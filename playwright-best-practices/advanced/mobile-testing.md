@@ -183,34 +183,6 @@ test("long press for context menu", async ({ page }) => {
 });
 ```
 
-### Pinch Zoom
-
-```typescript
-test("pinch to zoom image", async ({ page }) => {
-  await page.goto("/map");
-
-  // Pinch zoom requires two touch points
-  // Playwright doesn't have native pinch support, so we simulate via evaluate
-  await page.evaluate(() => {
-    const element = document.querySelector("#map");
-    if (element) {
-      // Simulate wheel event as fallback for zoom
-      element.dispatchEvent(
-        new WheelEvent("wheel", {
-          deltaY: -100, // Negative = zoom in
-          ctrlKey: true, // Ctrl+wheel = pinch on many apps
-        }),
-      );
-    }
-  });
-
-  // Or trigger the app's zoom function directly
-  await page.evaluate(() => {
-    (window as any).mapInstance?.setZoom(15);
-  });
-});
-```
-
 ## Viewport Testing
 
 ### Test Different Sizes
