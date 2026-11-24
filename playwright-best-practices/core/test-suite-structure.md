@@ -4,7 +4,7 @@
 
 1. [Configuration](#configuration)
 2. [E2E Tests](#e2e-tests)
-3. [API Tests](#api-tests)
+3. [API Mocking](#api-mocking)
 4. [Visual Regression Tests](#visual-regression-tests)
 5. [Directory Structure](#directory-structure)
 6. [Tagging & Filtering](#tagging--filtering)
@@ -106,11 +106,7 @@ test.describe("Checkout Flow", () => {
 - Keep tests independent
 - Use realistic data
 
-## API Tests
-
-Test backend APIs without browser.
-
-### API Mocking Patterns
+## API Mocking
 
 For E2E tests that need to mock API responses:
 
@@ -267,14 +263,10 @@ tests/
 │   ├── auth.spec.ts
 │   ├── checkout.spec.ts
 │   └── dashboard.spec.ts
-├── api/                    # API tests
-│   ├── users.spec.ts
-│   └── products.spec.ts
 ├── visual/                 # Visual regression tests
 │   └── homepage.spec.ts
 ├── fixtures/               # Custom fixtures
-│   ├── auth.fixture.ts
-│   └── api.fixture.ts
+│   └── auth.fixture.ts
 └── pages/                  # Page objects
     ├── login.page.ts
     └── dashboard.page.ts
@@ -307,11 +299,6 @@ test("checkout flow @e2e @critical", async ({ page }) => {
   // ...
 });
 
-test.describe("API tests @api", () => {
-  test("create user", async ({ request }) => {
-    // ...
-  });
-});
 ```
 
 ### Running Tagged Tests

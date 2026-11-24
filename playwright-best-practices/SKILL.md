@@ -1,6 +1,6 @@
 ---
 name: playwright-best-practices
-description: Use when writing Playwright tests, fixing flaky tests, debugging failures, implementing Page Object Model, configuring CI/CD, optimizing performance, mocking APIs, handling authentication or OAuth, file uploads/downloads, date/time mocking, WebSockets, multi-tab/popup flows, mobile/responsive layouts, touch gestures, error handling, offline mode, multi-user collaboration, console error monitoring, global setup/teardown, test annotations (skip, fixme, slow), test tags (@smoke, @fast, @critical, filtering with --grep), project dependencies, security testing (XSS, CSRF, auth), performance budgets (Web Vitals, Lighthouse), service workers/PWA, and test coverage. Covers E2E, API, visual, and security testing.
+description: Use when writing Playwright tests, fixing flaky tests, debugging failures, implementing Page Object Model, configuring CI/CD, optimizing performance, mocking APIs, handling authentication or OAuth, file uploads/downloads, date/time mocking, WebSockets, multi-tab/popup flows, mobile/responsive layouts, touch gestures, error handling, offline mode, multi-user collaboration, console error monitoring, global setup/teardown, test annotations (skip, fixme, slow), test tags (@smoke, @fast, @critical, filtering with --grep), project dependencies, security testing (XSS, CSRF, auth), and service workers/PWA. Covers E2E, visual, and security testing.
 license: MIT
 metadata:
   author: currents.dev
@@ -22,7 +22,6 @@ Consult these references based on what you're doing:
 | Activity                            | Reference Files                                                                                                                               |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Writing E2E tests**               | [test-suite-structure.md](core/test-suite-structure.md), [locators.md](core/locators.md), [assertions-waiting.md](core/assertions-waiting.md) |
-| **Writing API tests**               | [api-testing.md](testing-patterns/api-testing.md), [test-suite-structure.md](core/test-suite-structure.md)                                    |
 | **Structuring test code with POM**  | [page-object-model.md](core/page-object-model.md), [test-suite-structure.md](core/test-suite-structure.md)                                    |
 | **Setting up test data/fixtures**   | [fixtures-hooks.md](core/fixtures-hooks.md), [test-data.md](core/test-data.md)                                                                |
 | **Handling authentication**         | [authentication.md](advanced/authentication.md), [authentication-flows.md](advanced/authentication-flows.md)                                  |
@@ -142,7 +141,6 @@ Consult these references based on what you're doing:
 | **Optimizing test performance**         | [performance.md](infrastructure-ci-cd/performance.md), [test-suite-structure.md](core/test-suite-structure.md)           |
 | **Configuring parallel execution**      | [performance.md](infrastructure-ci-cd/performance.md)                                            |
 | **Isolating test data between workers** | [fixtures-hooks.md](core/fixtures-hooks.md), [performance.md](infrastructure-ci-cd/performance.md)                       |
-| **Test coverage**                       | [test-coverage.md](infrastructure-ci-cd/test-coverage.md)                                                                |
 | **Test reporting/artifacts**            | [reporting.md](infrastructure-ci-cd/reporting.md)                                                                        |
 
 ### Advanced Patterns
@@ -156,8 +154,6 @@ Consult these references based on what you're doing:
 | **Advanced waiting strategies**      | [assertions-waiting.md](core/assertions-waiting.md)                                                          |
 | **Failing on console errors**        | [console-errors.md](debugging/console-errors.md)                                                             |
 | **Security testing (XSS, CSRF)**     | [security-testing.md](testing-patterns/security-testing.md)                                                  |
-| **Performance budgets & Web Vitals** | [performance-testing.md](testing-patterns/performance-testing.md)                                            |
-| **Lighthouse integration**           | [performance-testing.md](testing-patterns/performance-testing.md)                                            |
 | **Test annotations (skip, fixme)**   | [annotations.md](core/annotations.md)                                                                        |
 | **Test tags (@smoke, @fast)**        | [test-tags.md](core/test-tags.md)                                                                            |
 | **Test steps for reporting**         | [annotations.md](core/annotations.md)                                                                        |
@@ -169,7 +165,6 @@ What are you doing?
 │
 ├─ Writing a new test?
 │  ├─ E2E test → core/test-suite-structure.md, core/locators.md, core/assertions-waiting.md
-│  ├─ API test → testing-patterns/api-testing.md, core/test-suite-structure.md
 │  ├─ Mobile/responsive test → advanced/mobile-testing.md
 │  ├─ Multi-user test → advanced/multi-user.md
 │  ├─ Form validation test → testing-patterns/forms-validation.md
@@ -182,7 +177,6 @@ What are you doing?
 │  ├─ OAuth popup flow → advanced/multi-context.md
 │  ├─ Service workers/PWA → browser-apis/service-workers.md
 │  ├─ Security (XSS, CSRF) → testing-patterns/security-testing.md
-│  └─ Performance/Web Vitals → testing-patterns/performance-testing.md
 │
 ├─ Architecture decisions?
 │  ├─ POM vs fixtures → architecture/pom-vs-fixtures.md
@@ -228,7 +222,6 @@ What are you doing?
 │  ├─ Global setup/teardown → core/global-setup.md
 │  ├─ Project dependencies → core/projects-dependencies.md
 │  ├─ Test performance → infrastructure-ci-cd/performance.md
-│  ├─ Test coverage → infrastructure-ci-cd/test-coverage.md
 │  └─ Project config → core/configuration.md, core/projects-dependencies.md
 │
 ├─ Organizing tests?

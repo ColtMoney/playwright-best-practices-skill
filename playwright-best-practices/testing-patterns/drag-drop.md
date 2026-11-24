@@ -33,12 +33,12 @@ test('simulates drag-over visual feedback', async ({ page }) => {
   });
   await dropZone.dispatchEvent('dragenter', { dataTransfer });
 
-  await expect(dropZone).toHaveClass(/drag-active|drop-highlight/);
-  await expect(dropZone).toContainText(/drop.*here|release.*upload/i);
+  const dragHint = dropZone.getByText(/drop.*here|release.*upload/i);
+  await expect(dragHint).toBeVisible();
 
   await dropZone.dispatchEvent('dragleave');
 
-  await expect(dropZone).not.toHaveClass(/drag-active|drop-highlight/);
+  await expect(dragHint).not.toBeVisible();
 });
 
 test('rejects invalid file types', async ({ page }) => {

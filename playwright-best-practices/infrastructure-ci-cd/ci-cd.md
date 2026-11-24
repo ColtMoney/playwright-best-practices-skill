@@ -173,10 +173,6 @@ export default defineConfig({
 ```typescript
 // playwright.config.ts
 import { defineConfig } from "@playwright/test";
-import dotenv from "dotenv";
-
-// Load env file based on environment
-dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
 
 export default defineConfig({
   use: {

@@ -341,9 +341,6 @@ export const test = base.extend<{ tempFile: string }>({
 # Run headless with CI environment variable
 CI=true npx playwright test
 
-# Limit CPU (Linux/Mac)
-cpulimit -l 50 -- npx playwright test
-
 # Run in Docker matching CI environment
 docker run -it --rm \
   -v $(pwd):/work \

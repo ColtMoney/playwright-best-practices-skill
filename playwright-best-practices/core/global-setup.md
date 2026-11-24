@@ -176,30 +176,6 @@ async function globalTeardown() {
 export default globalTeardown;
 ```
 
-### Environment Variables Setup
-
-```typescript
-// global-setup.ts
-import dotenv from "dotenv";
-import path from "path";
-
-async function globalSetup() {
-  // Load test-specific environment
-  const envFile = process.env.CI ? ".env.ci" : ".env.test";
-  dotenv.config({ path: path.resolve(process.cwd(), envFile) });
-
-  // Validate required variables
-  const required = ["API_KEY", "TEST_EMAIL"];
-  for (const key of required) {
-    if (!process.env[key]) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-  }
-}
-
-export default globalSetup;
-```
-
 ## Setup Projects vs Global Setup
 
 ### When to Use Each

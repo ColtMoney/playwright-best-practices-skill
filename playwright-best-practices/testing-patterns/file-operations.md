@@ -292,56 +292,6 @@ test("drag and drop with setInputFiles", async ({ page }) => {
 
 ## File Content Verification
 
-### Verify PDF Content
-
-```typescript
-import pdf from "pdf-parse";
-
-test("verify PDF content", async ({ page }, testInfo) => {
-  await page.goto("/invoice/123");
-
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download Invoice" }).click();
-  const download = await downloadPromise;
-
-  const path = testInfo.outputPath("invoice.pdf");
-  await download.saveAs(path);
-
-  // Parse PDF
-  const dataBuffer = fs.readFileSync(path);
-  const data = await pdf(dataBuffer);
-
-  expect(data.text).toContain("Invoice #123");
-  expect(data.text).toContain("Total: $99.99");
-});
-```
-
-### Verify Excel Content
-
-```typescript
-import XLSX from "xlsx";
-
-test("verify Excel export", async ({ page }, testInfo) => {
-  await page.goto("/reports");
-
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export Excel" }).click();
-  const download = await downloadPromise;
-
-  const path = testInfo.outputPath("report.xlsx");
-  await download.saveAs(path);
-
-  // Parse Excel
-  const workbook = XLSX.readFile(path);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const data = XLSX.utils.sheet_to_json(sheet);
-
-  expect(data).toHaveLength(10);
-  expect(data[0]).toHaveProperty("Name");
-  expect(data[0]).toHaveProperty("Email");
-});
-```
-
 ### Verify JSON Download
 
 ```typescript

@@ -1,13 +1,12 @@
-# Test Data Factories & Generators
+# Test Data Factories
 
-This file covers **reusable test data builders** (factories, Faker, data generators).
+This file covers **reusable test data builders**.
 
 ## Table of Contents
 
 1. [Factory Pattern](#factory-pattern)
-2. [Faker Integration](#faker-integration)
-3. [Data-Driven Testing](#data-driven-testing)
-4. [Test Data Fixtures](#test-data-fixtures)
+2. [Data-Driven Testing](#data-driven-testing)
+3. [Test Data Fixtures](#test-data-fixtures)
 
 ## Factory Pattern
 
@@ -145,104 +144,6 @@ const bigOrder = createOrder({
     { product: createProduct({ price: 100 }), quantity: 5 },
     { product: createProduct({ price: 50 }), quantity: 2 },
   ],
-});
-```
-
-## Faker Integration
-
-### Setup Faker
-
-```bash
-npm install -D @faker-js/faker
-```
-
-```typescript
-// factories/faker-user.factory.ts
-import { faker } from "@faker-js/faker";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar: string;
-  address: {
-    street: string;
-    city: string;
-    country: string;
-    zipCode: string;
-  };
-}
-
-export function createFakeUser(overrides: Partial<User> = {}): User {
-  return {
-    id: faker.string.uuid(),
-    email: faker.internet.email(),
-    name: faker.person.fullName(),
-    avatar: faker.image.avatar(),
-    address: {
-      street: faker.location.streetAddress(),
-      city: faker.location.city(),
-      country: faker.location.country(),
-      zipCode: faker.location.zipCode(),
-    },
-    ...overrides,
-  };
-}
-```
-
-### Seeded Faker for Reproducibility
-
-```typescript
-import { faker } from "@faker-js/faker";
-
-// Set seed for reproducible data
-faker.seed(12345);
-
-export function createDeterministicUser(): User {
-  return {
-    id: faker.string.uuid(),
-    email: faker.internet.email(),
-    name: faker.person.fullName(),
-    // Same seed = same data every time
-  };
-}
-
-// Or seed per test
-test("user profile", async ({ page }) => {
-  faker.seed(42); // Reset seed for this test
-  const user = createFakeUser();
-  // user will always have the same data
-});
-```
-
-### Faker Fixture
-
-```typescript
-// fixtures/faker.fixture.ts
-import { test as base } from "@playwright/test";
-import { faker } from "@faker-js/faker";
-
-type FakerFixtures = {
-  fake: typeof faker;
-};
-
-export const test = base.extend<FakerFixtures>({
-  fake: async ({}, use, testInfo) => {
-    // Seed based on test name for reproducibility
-    faker.seed(testInfo.title.length);
-    await use(faker);
-  },
-});
-
-// Usage
-test("create user with fake data", async ({ page, fake }) => {
-  await page.goto("/signup");
-
-  await page.getByLabel("Name").fill(fake.person.fullName());
-  await page.getByLabel("Email").fill(fake.internet.email());
-  await page.getByLabel("Password").fill(fake.internet.password());
-
-  await page.getByRole("button", { name: "Sign Up" }).click();
 });
 ```
 
@@ -393,11 +294,10 @@ test("add product to cart", async ({ page, testUser, testProducts }) => {
 | Anti-Pattern                    | Problem                         | Solution                   |
 | ------------------------------- | ------------------------------- | -------------------------- |
 | Hardcoded test data             | Brittle, repetitive             | Use factories              |
-| Random data without seed        | Non-reproducible failures       | Seed faker per test        |
 | Shared mutable test data        | Tests interfere with each other | Create fresh data per test |
 | Manual data creation everywhere | Duplication, maintenance burden | Centralize in factories    |
 
 ## Related References
 
 - **Fixtures**: See [fixtures-hooks.md](fixtures-hooks.md) for fixture patterns
-- **API Testing**: See [test-suite-structure.md](test-suite-structure.md) for API mocking
+- **API Mocking**: See [test-suite-structure.md](test-suite-structure.md) for API mocking

@@ -221,16 +221,6 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-      - name: Notify on failure
-        if: failure()
-        uses: slackapi/slack-github-action@latest
-        with:
-          payload: |
-            {
-              "text": "Nightly regression failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 ```
 
 ### Reusable Workflow

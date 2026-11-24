@@ -340,54 +340,6 @@ test("admin sees remove button, guest does not", async ({ loginAs }) => {
 });
 ```
 
-### MFA Handling
-
-**Use when**: Your app requires two-factor authentication (TOTP, SMS, email codes).
-**Avoid when**: MFA is optional and you can disable it for test accounts.
-
-**Strategy 1**: Generate real TOTP codes from a shared secret.
-
-```typescript
-// helpers/totp.ts
-import * as OTPAuth from "otpauth";
-
-export function generateTOTP(secret: string): string {
-  const totp = new OTPAuth.TOTP({
-    secret: OTPAuth.Secret.fromBase32(secret),
-    digits: 6,
-    period: 30,
-    algorithm: "SHA1",
-  });
-  return totp.generate();
-}
-```
-
-```typescript
-// tests/mfa-login.spec.ts
-import { test, expect } from "@playwright/test";
-import { generateTOTP } from "../helpers/totp";
-
-test("login with TOTP two-factor auth", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("Username").fill("mfa-user@example.com");
-  await page.getByLabel("Password").fill("secretPass123");
-  await page.getByRole("button", { name: "Log in" }).click();
-
-  await expect(page.getByText("Enter your authentication code")).toBeVisible();
-
-  const code = generateTOTP(process.env.MFA_TOTP_SECRET!);
-  await page.getByLabel("Authentication code").fill(code);
-  await page.getByRole("button", { name: "Verify" }).click();
-
-  await page.waitForURL("/home");
-  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-});
-```
-
-**Strategy 2**: Mock MFA at the backend level. Have your backend accept a known bypass code (e.g., `000000`) when `NODE_ENV=test`.
-
-**Strategy 3**: Disable MFA for test accounts at the infrastructure level.
-
 ### Session Refresh
 
 **Use when**: Your tokens expire during long test runs.
@@ -774,5 +726,4 @@ projects: [
 - [fixtures-hooks.md](../core/fixtures-hooks.md) — custom fixtures for auth setup and teardown
 - [configuration.md](../core/configuration.md) — `storageState` and project configuration
 - [projects-dependencies.md](../core/projects-dependencies.md) — setup project dependencies
-- [api-testing.md](../testing-patterns/api-testing.md) — API request context used in API-based login
 - [flaky-tests.md](../debugging/flaky-tests.md) — diagnosing auth-related flakiness

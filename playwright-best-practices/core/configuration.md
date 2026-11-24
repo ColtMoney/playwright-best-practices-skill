@@ -69,10 +69,6 @@ DEBUG=pw:api npx playwright test              # verbose logging
 ```ts
 // playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
-
-dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
   testDir: './e2e',
@@ -129,16 +125,13 @@ export default defineConfig({
 ```ts
 // playwright.config.ts
 import { defineConfig } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
 
 const ENV = process.env.TEST_ENV || 'local';
-dotenv.config({ path: path.resolve(__dirname, `.env.${ENV}`) });
 
 const envConfig: Record<string, { baseURL: string; retries: number }> = {
   local:   { baseURL: 'http://localhost:4000',      retries: 0 },
-  staging: { baseURL: 'https://staging.myapp.com',  retries: 2 },
-  prod:    { baseURL: 'https://myapp.com',          retries: 2 },
+  staging: { baseURL: 'https://staging.example.com', retries: 2 },
+  prod:    { baseURL: 'https://example.com',         retries: 2 },
 };
 
 export default defineConfig({
@@ -227,42 +220,6 @@ export default defineConfig({
     },
   },
 });
-```
-
-### Environment Variables with .env
-
-**Use when**: Managing secrets, URLs, or feature flags without hardcoding.
-
-```bash
-# .env.example (commit this)
-BASE_URL=http://localhost:4000
-TEST_PASSWORD=
-API_KEY=
-
-# .env.local (gitignored)
-BASE_URL=http://localhost:4000
-TEST_PASSWORD=secret123
-API_KEY=dev-key-abc
-
-# .env.staging (gitignored)
-BASE_URL=https://staging.myapp.com
-TEST_PASSWORD=staging-pass
-API_KEY=staging-key-xyz
-```
-
-```bash
-# .gitignore
-.env
-.env.local
-.env.staging
-.env.production
-playwright/.auth/
-```
-
-Install dotenv:
-
-```bash
-npm install -D dotenv
 ```
 
 ### Tag-Based Test Filtering

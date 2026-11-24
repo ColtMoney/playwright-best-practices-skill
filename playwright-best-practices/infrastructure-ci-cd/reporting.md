@@ -50,8 +50,6 @@ npx playwright show-report
 npx playwright show-trace test-results/path-to-test/trace.zip
 ```
 
-You can also open traces at [trace.playwright.dev](https://trace.playwright.dev/).
-
 ## Optional: Uploading the Report in GitHub Actions
 
 If project policy allows it, upload the HTML report after test failures:

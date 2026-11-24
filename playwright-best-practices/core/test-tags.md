@@ -142,8 +142,6 @@ npx playwright test --grep "(?=.*@fast)(?=.*@critical)"
 # Run @e2e tests that are also @critical
 npx playwright test --grep "(?=.*@e2e)(?=.*@critical)"
 
-# Run @api tests excluding @slow
-npx playwright test --grep "@api" --grep-invert "@slow"
 ```
 
 ## Configuration-Based Filtering
